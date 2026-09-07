@@ -1,15 +1,12 @@
 /**
  * SwarSaarthi — Home Page
  *
- * A warm, human-centric, ultra-attractive landing page with:
- *  - Organic background shapes and responsive cursor follower
- *  - Hero section with interactive CTA & bilingual title
- *  - Live interactive sample word teaser card
- *  - "Why SwarSaarthi" Assistive Vision section
- *  - 3-Step "How It Works" interactive tilt cards
- *  - Application Features Showcase grid
- *  - Student Engineering Project story badge
- *  - Motivational Hindi quote & Call-to-action
+ * A warm, human-centric, ultra-attractive landing page featuring:
+ *  - Distinct vibrant color theme for EVERY section with smooth background transitions
+ *  - Sleek modern cards (rounded-xl, backdrop-blur translucent glass)
+ *  - Prominent centered Real-Color watermark icon background overlays (opacity 25%-45%)
+ *  - All text color styled as text-zinc-900 for high-contrast crisp readability
+ *  - Fully reactive bilingual support via useLanguage(): when toggled, cards show ONLY the active language
  */
 
 "use client";
@@ -23,44 +20,29 @@ export default function Home() {
   const { t } = useLanguage();
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden font-sans">
       {/* ================================================================
-          ORGANIC BACKGROUND DECORATIVE BLOBS
+          1. HERO SECTION — Warm Terracotta & Sunset Glow Theme
           ================================================================ */}
-      <div className="pointer-events-none absolute top-10 -left-20 w-96 h-96 bg-primary-100/40 rounded-full blur-3xl blob-shape -z-10" />
-      <div className="pointer-events-none absolute top-96 -right-20 w-80 h-80 bg-secondary/10 rounded-full blur-3xl blob-shape -z-10" style={{ animationDelay: "4s" }} />
-      <div className="pointer-events-none absolute bottom-1/3 left-10 w-72 h-72 bg-accent/15 rounded-full blur-3xl blob-shape -z-10" style={{ animationDelay: "2s" }} />
+      <section className="relative py-20 sm:py-28 px-4 bg-linear-to-b from-[#FFF5ED] via-[#FFE8D6] to-[#FFF0E5] transition-colors duration-700">
+        {/* Background decorative ambient glow */}
+        <div className="pointer-events-none absolute top-10 left-1/2 -translate-x-1/2 w-250 h-75 bg-primary/10 rounded-full blur-3xl blob-shape z-0" />
 
-      {/* ================================================================
-          HERO SECTION
-          ================================================================ */}
-      <section className="relative py-16 sm:py-24 px-4">
-        <div className="max-w-5xl mx-auto text-center">
-          {/* App badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-md border border-primary-200/60 shadow-sm mb-6 animate-slide-up transform hover:-rotate-1 transition-transform cursor-pointer">
-            <span className="text-sm">🗣️</span>
-            <span className="text-xs sm:text-sm font-semibold text-primary">
-              {t.tagline}
-            </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-100 text-primary-dark">
-              Hindi Pronunciation
-            </span>
-          </div>
-
-          {/* Main heading — bilingual */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-text-primary mb-4 leading-tight tracking-tight animate-slide-up">
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          {/* Main Title */}
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-zinc-900 mb-4 leading-tight tracking-tight animate-slide-up">
             {t.heroTitle}
           </h1>
 
           {/* Hindi subtitle with hand-drawn underline accent */}
-          <div className="mb-6 animate-slide-up">
-            <span className="text-3xl sm:text-4xl font-hindi text-primary font-bold underline-hand-drawn px-2 py-1">
+          <div className="mb-8 animate-slide-up">
+            <span className="text-3xl sm:text-5xl font-hindi text-primary font-bold underline-hand-drawn px-3 py-1">
               आइए, साथ मिलकर बोलना सीखें
             </span>
           </div>
 
           {/* Description */}
-          <p className="text-base sm:text-xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed animate-slide-up font-normal">
+          <p className="text-base sm:text-xl text-zinc-800 max-w-2xl mx-auto mb-10 leading-relaxed animate-slide-up font-medium">
             {t.heroSubtitle}
           </p>
 
@@ -68,112 +50,124 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-up mb-10">
             <Link
               href="/practice"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-primary text-white font-bold text-base sm:text-lg shadow-lg shadow-primary/25 hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/30 active:scale-95 transition-all duration-200 group"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-primary text-white font-extrabold text-base sm:text-lg shadow-xl shadow-primary/25 hover:bg-primary-dark hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all duration-300 group"
             >
               <span className="text-xl group-hover:scale-125 transition-transform duration-200">🎙️</span>
               <span>{t.ctaPractice}</span>
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </Link>
 
             <Link
               href="/profile"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-white text-primary font-bold text-base sm:text-lg border-2 border-primary-200 hover:border-primary hover:bg-primary-50/50 shadow-sm active:scale-95 transition-all duration-200 group"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-white/90 backdrop-blur-md text-primary font-extrabold text-base sm:text-lg border-2 border-primary-200 hover:border-primary hover:bg-primary-50/60 shadow-md active:scale-95 transition-all duration-300 group"
             >
               <span className="text-xl group-hover:rotate-12 transition-transform duration-200">📊</span>
               <span>{t.ctaProfile}</span>
             </Link>
           </div>
 
-          {/* Disclaimer badge */}
-          <div className="inline-block px-4 py-1.5 rounded-full bg-warm-sand/80 border border-primary-100 text-xs text-text-secondary italic">
+          {/* Assistive Tool Notice */}
+          <div className="inline-block px-5 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-primary-200/60 text-xs font-semibold text-zinc-900 shadow-xs">
             ⓘ {t.disclaimer}
           </div>
         </div>
       </section>
 
       {/* ================================================================
-          LIVE INTERACTIVE DEMO SECTION (TEASER)
+          2. LIVE INTERACTIVE DEMO SECTION — Fresh Forest Sage Theme
           ================================================================ */}
-      <section className="py-8 px-4">
+      <section className="py-16 sm:py-24 px-4 bg-linear-to-b from-[#FFF0E5] via-[#E2F0EA] to-[#D9EDE3] transition-colors duration-700 border-t border-secondary/20">
         <HomeWordTeaser />
       </section>
 
       {/* ================================================================
-          WHY SWARSAARTHI? (HUMAN EMPATHY & VISION SECTION)
+          3. WHY SWARSAARTHI? (HUMAN EMPATHY) — Warm Honey & Golden Amber Theme
           ================================================================ */}
-      <section className="py-16 sm:py-20 px-4">
+      <section className="py-20 sm:py-28 px-4 bg-linear-to-b from-[#D9EDE3] via-[#FFF2D4] to-[#FFEBC2] transition-colors duration-700 border-t border-accent/20">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-secondary/15 text-secondary-dark uppercase tracking-wider mb-2 inline-block">
-              🌱 Empowering Every Voice
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-xs font-extrabold px-4 py-1.5 rounded-full bg-amber-200/80 text-amber-950 uppercase tracking-wider mb-3 inline-block shadow-xs border border-amber-300/60">
+              {t.empathyBadge}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-text-primary">
-              Designed with Empathy & Kindness
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-zinc-900">
+              {t.empathyTitle}
             </h2>
-            <p className="text-base text-text-secondary mt-2">
-              Speech articulation is a journey. SwarSaarthi provides a safe, patient space to practice Hindi pronunciation comfortably without any stress.
+            <p className="text-base text-zinc-800 mt-3 font-medium">
+              {t.empathySubtitle}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Card 1 */}
-            <TiltCard maxTilt={6}>
-              <div className="card-warm p-8 h-full flex flex-col justify-between group border-l-4 border-l-primary">
-                <div>
-                  <div className="w-14 h-14 rounded-2xl bg-primary-50 text-primary flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+            <TiltCard maxTilt={8}>
+              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-8 h-full flex flex-col justify-between border border-white/80 shadow-lg hover:bg-white/70 transition-all group">
+                {/* Centered Real-Color Watermark Logo */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
                     💖
-                  </div>
-                  <h3 className="text-xl font-bold text-text-primary mb-3">
-                    Zero Judgment Space
+                  </span>
+                </div>
+
+                <div className="relative z-10 pt-2">
+                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
+                    {t.empathyCard1Title}
                   </h3>
-                  <p className="text-sm text-text-secondary leading-relaxed">
-                    Practice as many times as you like. There are no timers pushing you and no social pressure — just you and your assistive guide.
+                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.empathyCard1Desc}
                   </p>
                 </div>
-                <div className="mt-6 pt-4 border-t border-primary-100/60 text-xs font-medium text-primary">
-                  100% Patient & Encouraging
+                <div className="relative z-10 mt-8 pt-4 border-t border-primary-200/60 text-xs font-bold text-primary">
+                  {t.empathyCard1Tag}
                 </div>
               </div>
             </TiltCard>
 
             {/* Card 2 */}
-            <TiltCard maxTilt={6}>
-              <div className="card-warm p-8 h-full flex flex-col justify-between group border-l-4 border-l-secondary">
-                <div>
-                  <div className="w-14 h-14 rounded-2xl bg-secondary/15 text-secondary-dark flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+            <TiltCard maxTilt={8}>
+              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-8 h-full flex flex-col justify-between border border-white/80 shadow-lg hover:bg-white/70 transition-all group">
+                {/* Centered Real-Color Watermark Logo */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
                     🎧
-                  </div>
-                  <h3 className="text-xl font-bold text-text-primary mb-3">
-                    Gentle Audio Guidance
+                  </span>
+                </div>
+
+                <div className="relative z-10 pt-2">
+                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
+                    {t.empathyCard2Title}
                   </h3>
-                  <p className="text-sm text-text-secondary leading-relaxed">
-                    Listen to standard Hindi pronunciations repeatedly. Replay words slowly to catch phonetic nuances and syllabic flow.
+                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.empathyCard2Desc}
                   </p>
                 </div>
-                <div className="mt-6 pt-4 border-t border-secondary/20 text-xs font-medium text-secondary-dark">
-                  Clear Hindi Phonetics
+                <div className="relative z-10 mt-8 pt-4 border-t border-secondary/30 text-xs font-bold text-secondary-dark">
+                  {t.empathyCard2Tag}
                 </div>
               </div>
             </TiltCard>
 
             {/* Card 3 */}
-            <TiltCard maxTilt={6}>
-              <div className="card-warm p-8 h-full flex flex-col justify-between group border-l-4 border-l-accent">
-                <div>
-                  <div className="w-14 h-14 rounded-2xl bg-accent/15 text-amber-700 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+            <TiltCard maxTilt={8}>
+              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-8 h-full flex flex-col justify-between border border-white/80 shadow-lg hover:bg-white/70 transition-all group">
+                {/* Centered Real-Color Watermark Logo */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
                     🌱
-                  </div>
-                  <h3 className="text-xl font-bold text-text-primary mb-3">
-                    Step-by-Step Progress
+                  </span>
+                </div>
+
+                <div className="relative z-10 pt-2">
+                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
+                    {t.empathyCard3Title}
                   </h3>
-                  <p className="text-sm text-text-secondary leading-relaxed">
-                    Track your daily word completions and accuracy growth over time. Celebrate every small victory along the way!
+                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.empathyCard3Desc}
                   </p>
                 </div>
-                <div className="mt-6 pt-4 border-t border-accent/20 text-xs font-medium text-amber-700">
-                  Celebrate Small Victories
+                <div className="relative z-10 mt-8 pt-4 border-t border-amber-300/60 text-xs font-bold text-amber-900">
+                  {t.empathyCard3Tag}
                 </div>
               </div>
             </TiltCard>
@@ -182,78 +176,110 @@ export default function Home() {
       </section>
 
       {/* ================================================================
-          HOW IT WORKS SECTION (WITH INTERACTIVE TILT CARDS)
+          4. HOW IT WORKS SECTION — Earthy Rose & Terracotta Clay Theme
           ================================================================ */}
-      <section className="py-16 sm:py-24 px-4 bg-white/80 backdrop-blur-sm border-y border-primary-100/50">
+      <section className="py-20 sm:py-28 px-4 bg-linear-to-b from-[#FFEBC2] via-[#F8E2DC] to-[#F2D5CB] transition-colors duration-700 border-t border-primary-100">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-primary-100 text-primary-dark uppercase tracking-wider mb-2 inline-block">
-              ✨ Simple 3-Step Journey
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="text-xs font-extrabold px-4 py-1.5 rounded-full bg-primary-100 text-primary-dark uppercase tracking-wider mb-3 inline-block shadow-xs border border-primary-200/60">
+              {t.howItWorksBadge}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-text-primary">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-zinc-900">
               {t.howItWorksTitle}
             </h2>
-            <p className="text-base text-text-secondary mt-2">
-              Designed for intuitive use by anyone, anywhere, with simple one-tap controls.
+            <p className="text-base text-zinc-800 mt-3 font-medium">
+              {t.howItWorksSubtitle}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Step 1: Listen */}
             <TiltCard maxTilt={8}>
-              <div className="card-warm p-8 text-center relative group h-full flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full bg-primary-50 flex items-center justify-center mb-6 group-hover:bg-primary-100 transition-colors shadow-inner">
-                  <span className="text-4xl animate-float">👂</span>
+              <div className="relative overflow-hidden bg-white/55 backdrop-blur-md rounded-xl p-8 border border-white/80 shadow-lg hover:bg-white/75 transition-all group h-full flex flex-col justify-between">
+                {/* Centered Real-Color Watermark Logo */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
+                    👂
+                  </span>
                 </div>
-                <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-base font-bold mb-4 shadow-md">
-                  1
+
+                <div className="relative z-10 flex items-center justify-between mb-6">
+                  <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-extrabold shadow-md">
+                    1
+                  </div>
+                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-primary-50 text-primary uppercase tracking-wider">
+                    {t.step1Label}
+                  </span>
                 </div>
-                <h3 className="text-xl font-bold text-text-primary mb-3">
-                  {t.step1Title}
-                </h3>
-                <p className="text-sm text-text-secondary leading-relaxed">
-                  {t.step1Desc}
-                </p>
+
+                <div className="relative z-10">
+                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
+                    {t.step1Title}
+                  </h3>
+                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.step1Desc}
+                  </p>
+                </div>
               </div>
             </TiltCard>
 
             {/* Step 2: Speak */}
             <TiltCard maxTilt={8}>
-              <div className="card-warm p-8 text-center relative group h-full flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full bg-secondary/15 flex items-center justify-center mb-6 group-hover:bg-secondary/25 transition-colors shadow-inner">
-                  <span className="text-4xl animate-float" style={{ animationDelay: "0.5s" }}>
+              <div className="relative overflow-hidden bg-white/55 backdrop-blur-md rounded-xl p-8 border border-white/80 shadow-lg hover:bg-white/75 transition-all group h-full flex flex-col justify-between">
+                {/* Centered Real-Color Mic Watermark Logo */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
                     🎙️
                   </span>
                 </div>
-                <div className="w-9 h-9 rounded-full bg-secondary text-white flex items-center justify-center text-base font-bold mb-4 shadow-md">
-                  2
+
+                <div className="relative z-10 flex items-center justify-between mb-6">
+                  <div className="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center text-lg font-extrabold shadow-md">
+                    2
+                  </div>
+                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-secondary/20 text-secondary-dark uppercase tracking-wider">
+                    {t.step2Label}
+                  </span>
                 </div>
-                <h3 className="text-xl font-bold text-text-primary mb-3">
-                  {t.step2Title}
-                </h3>
-                <p className="text-sm text-text-secondary leading-relaxed">
-                  {t.step2Desc}
-                </p>
+
+                <div className="relative z-10">
+                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
+                    {t.step2Title}
+                  </h3>
+                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.step2Desc}
+                  </p>
+                </div>
               </div>
             </TiltCard>
 
             {/* Step 3: Improve */}
             <TiltCard maxTilt={8}>
-              <div className="card-warm p-8 text-center relative group h-full flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full bg-accent/15 flex items-center justify-center mb-6 group-hover:bg-accent/25 transition-colors shadow-inner">
-                  <span className="text-4xl animate-float" style={{ animationDelay: "1s" }}>
+              <div className="relative overflow-hidden bg-white/55 backdrop-blur-md rounded-xl p-8 border border-white/80 shadow-lg hover:bg-white/75 transition-all group h-full flex flex-col justify-between">
+                {/* Centered Real-Color Watermark Logo */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
                     📈
                   </span>
                 </div>
-                <div className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center text-base font-bold mb-4 shadow-md">
-                  3
+
+                <div className="relative z-10 flex items-center justify-between mb-6">
+                  <div className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-lg font-extrabold shadow-md">
+                    3
+                  </div>
+                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-amber-100 text-amber-900 uppercase tracking-wider">
+                    {t.step3Label}
+                  </span>
                 </div>
-                <h3 className="text-xl font-bold text-text-primary mb-3">
-                  {t.step3Title}
-                </h3>
-                <p className="text-sm text-text-secondary leading-relaxed">
-                  {t.step3Desc}
-                </p>
+
+                <div className="relative z-10">
+                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
+                    {t.step3Title}
+                  </h3>
+                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.step3Desc}
+                  </p>
+                </div>
               </div>
             </TiltCard>
           </div>
@@ -261,110 +287,134 @@ export default function Home() {
       </section>
 
       {/* ================================================================
-          FEATURES SHOWCASE GRID
+          5. FEATURES SHOWCASE GRID — Rich Warm Stone Theme (FULLY REACTIVE BILINGUAL)
           ================================================================ */}
-      <section className="py-16 sm:py-24 px-4">
+      <section className="py-20 sm:py-28 px-4 bg-linear-to-b from-[#F2D5CB] via-[#EFEAE2] to-[#E8E1D5] transition-colors duration-700 border-t border-[#DCD3C7]">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-primary-100 text-primary-dark uppercase tracking-wider mb-2 inline-block">
-              🌟 Core Features
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="text-xs font-extrabold px-4 py-1.5 rounded-full bg-[#DFD6C9] text-zinc-900 uppercase tracking-wider mb-3 inline-block shadow-xs border border-[#D5CBC0]">
+              {t.featuresBadge}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-text-primary">
-              Built for Accessible Speech Practice
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-zinc-900">
+              {t.featuresTitle}
             </h2>
-            <p className="text-base text-text-secondary mt-2">
-              Everything you need to practice Hindi speech effectively in one place.
+            <p className="text-base text-zinc-800 mt-3 font-medium">
+              {t.featuresSubtitle}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Feature 1 */}
             <TiltCard maxTilt={6}>
-              <div className="card-warm p-6 h-full flex flex-col">
-                <div className="text-3xl mb-4 p-3 w-fit rounded-2xl bg-orange-100 text-primary">
-                  📚
+              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
+                    📚
+                  </span>
                 </div>
-                <h3 className="text-lg font-bold text-text-primary mb-2">
-                  Curated Hindi Words
-                </h3>
-                <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                  Carefully chosen vocabulary dataset focusing on key phonetic sounds, daily greetings, and common conversational terms.
-                </p>
+                <div className="relative z-10 pt-2">
+                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
+                    {t.feature1Title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.feature1Desc}
+                  </p>
+                </div>
               </div>
             </TiltCard>
 
             {/* Feature 2 */}
             <TiltCard maxTilt={6}>
-              <div className="card-warm p-6 h-full flex flex-col">
-                <div className="text-3xl mb-4 p-3 w-fit rounded-2xl bg-emerald-100 text-secondary-dark">
-                  🎙️
+              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
+                    🎙️
+                  </span>
                 </div>
-                <h3 className="text-lg font-bold text-text-primary mb-2">
-                  Single-Tap Recording
-                </h3>
-                <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                  Native browser audio capture configured for 16kHz speech recognition models with instant audio pulse animation.
-                </p>
+                <div className="relative z-10 pt-2">
+                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
+                    {t.feature2Title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.feature2Desc}
+                  </p>
+                </div>
               </div>
             </TiltCard>
 
             {/* Feature 3 */}
             <TiltCard maxTilt={6}>
-              <div className="card-warm p-6 h-full flex flex-col">
-                <div className="text-3xl mb-4 p-3 w-fit rounded-2xl bg-amber-100 text-amber-800">
-                  🎯
+              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
+                    🎯
+                  </span>
                 </div>
-                <h3 className="text-lg font-bold text-text-primary mb-2">
-                  Visual Accuracy Feedback
-                </h3>
-                <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                  Get immediate score indicators showing how close your pronunciation was, with helpful encouragement to try again.
-                </p>
+                <div className="relative z-10 pt-2">
+                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
+                    {t.feature3Title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.feature3Desc}
+                  </p>
+                </div>
               </div>
             </TiltCard>
 
             {/* Feature 4 */}
             <TiltCard maxTilt={6}>
-              <div className="card-warm p-6 h-full flex flex-col">
-                <div className="text-3xl mb-4 p-3 w-fit rounded-2xl bg-purple-100 text-purple-800">
-                  🌐
+              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
+                    🌐
+                  </span>
                 </div>
-                <h3 className="text-lg font-bold text-text-primary mb-2">
-                  Bilingual UI (En / Hi)
-                </h3>
-                <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                  Switch between English and Hindi interface text effortlessly anytime with our top navbar language toggle.
-                </p>
+                <div className="relative z-10 pt-2">
+                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
+                    {t.feature4Title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.feature4Desc}
+                  </p>
+                </div>
               </div>
             </TiltCard>
 
             {/* Feature 5 */}
             <TiltCard maxTilt={6}>
-              <div className="card-warm p-6 h-full flex flex-col">
-                <div className="text-3xl mb-4 p-3 w-fit rounded-2xl bg-blue-100 text-blue-800">
-                  📊
+              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
+                    📊
+                  </span>
                 </div>
-                <h3 className="text-lg font-bold text-text-primary mb-2">
-                  Personal Progress Dashboard
-                </h3>
-                <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                  Review your practiced word stats, accuracy trends, day streak, and focus on difficult words in your profile.
-                </p>
+                <div className="relative z-10 pt-2">
+                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
+                    {t.feature5Title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.feature5Desc}
+                  </p>
+                </div>
               </div>
             </TiltCard>
 
             {/* Feature 6 */}
             <TiltCard maxTilt={6}>
-              <div className="card-warm p-6 h-full flex flex-col">
-                <div className="text-3xl mb-4 p-3 w-fit rounded-2xl bg-rose-100 text-rose-800">
-                  🛡️
+              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
+                    🛡️
+                  </span>
                 </div>
-                <h3 className="text-lg font-bold text-text-primary mb-2">
-                  Private & Safe System
-                </h3>
-                <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                  Built purely as an assistive practice system for educational and personal improvement — not a medical diagnostic tool.
-                </p>
+                <div className="relative z-10 pt-2">
+                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
+                    {t.feature6Title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
+                    {t.feature6Desc}
+                  </p>
+                </div>
               </div>
             </TiltCard>
           </div>
@@ -372,25 +422,30 @@ export default function Home() {
       </section>
 
       {/* ================================================================
-          STUDENT PROJECT STORY & COMMUNITY CARD
+          6. STUDENT ENGINEERING PROJECT STORY — Sunset Peach Theme
           ================================================================ */}
-      <section className="py-12 px-4">
+      <section className="py-16 sm:py-24 px-4 bg-linear-to-b from-[#E8E1D5] via-[#FFE5D9] to-[#FFD8C7] transition-colors duration-700 border-t border-[#F0CEBE]">
         <div className="max-w-4xl mx-auto">
           <TiltCard maxTilt={4}>
-            <div className="p-8 sm:p-10 rounded-3xl bg-linear-to-r from-primary-50 via-warm-sand to-white border-2 border-primary-200/80 shadow-md relative overflow-hidden">
-              <div className="flex flex-col md:flex-row items-center gap-6">
-                <div className="w-20 h-20 rounded-2xl bg-primary text-white flex items-center justify-center text-4xl shrink-0 shadow-lg rotate-3">
+            <div className="p-8 sm:p-12 rounded-xl bg-white/60 backdrop-blur-md border border-white/90 shadow-xl relative overflow-hidden group">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <span className="text-9xl font-black select-none opacity-20 group-hover:scale-125 group-hover:opacity-35 transition-all duration-500">
+                  🎓
+                </span>
+              </div>
+              <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+                <div className="w-16 h-16 rounded-xl bg-primary text-white flex items-center justify-center text-3xl shrink-0 shadow-lg rotate-3 group-hover:rotate-6 transition-transform">
                   🎓
                 </div>
                 <div className="text-center md:text-left">
-                  <div className="inline-block px-3 py-1 rounded-md bg-primary-100 text-primary-dark text-xs font-bold mb-2">
-                    Final Year Engineering Capstone Project
+                  <div className="inline-block px-3.5 py-1 rounded-md bg-primary-100 text-primary-dark text-xs font-extrabold mb-3">
+                    {t.projectBadge}
                   </div>
-                  <h3 className="text-2xl font-bold text-text-primary mb-2">
-                    Built by Students, Powered by Purpose
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 mb-3">
+                    {t.projectTitle}
                   </h3>
-                  <p className="text-sm text-text-secondary leading-relaxed">
-                    SwarSaarthi (स्वर सारथी) was created as a final year engineering project to bridge the gap in speech assistive technology for Hindi speakers. Our mission is to make speech practice accessible, friendly, and empowering for individuals with speech articulation differences.
+                  <p className="text-sm sm:text-base text-zinc-900 font-medium leading-relaxed">
+                    {t.projectDesc}
                   </p>
                 </div>
               </div>
@@ -400,42 +455,17 @@ export default function Home() {
       </section>
 
       {/* ================================================================
-          MOTIVATIONAL SECTION
+          7. MOTIVATIONAL QUOTE SECTION — Soft Emerald Leaf Theme
           ================================================================ */}
-      <section className="py-16 px-4 bg-warm-sand/80 border-t border-primary-100">
+      <section className="py-20 px-4 bg-linear-to-b from-[#FFD8C7] via-[#D5EADF] to-[#FFF5ED] transition-colors duration-700 border-t border-secondary/20">
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-5xl mb-4 animate-bounce-gentle">🌱</p>
-          <blockquote className="text-2xl sm:text-4xl font-hindi text-text-primary font-bold leading-relaxed mb-4">
+          <blockquote className="text-2xl sm:text-4xl font-hindi text-zinc-900 font-extrabold leading-relaxed mb-4">
             &ldquo;हर शब्द एक कदम है, हर कदम एक उपलब्धि है&rdquo;
           </blockquote>
-          <p className="text-base text-text-secondary font-medium">
+          <p className="text-base text-zinc-900 font-semibold">
             Every word is a step, every step is an achievement
           </p>
-        </div>
-      </section>
-
-      {/* ================================================================
-          FINAL CTA BANNER
-          ================================================================ */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="p-10 sm:p-14 rounded-3xl bg-linear-to-br from-primary via-primary-dark to-accent text-white shadow-xl relative overflow-hidden">
-            <div className="relative z-10">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4 font-hindi">
-                क्या आप अभ्यास शुरू करने के लिए तैयार हैं?
-              </h2>
-              <p className="text-base sm:text-lg text-primary-100 mb-8 max-w-xl mx-auto">
-                Step into the Practice Room and try your first word today!
-              </p>
-              <Link
-                href="/practice"
-                className="inline-flex items-center justify-center gap-3 px-10 py-4 rounded-full bg-white text-primary font-extrabold text-lg shadow-lg hover:bg-warm-cream hover:scale-105 active:scale-95 transition-all duration-200"
-              >
-                <span>🎙️</span>
-                <span>{t.ctaPractice}</span>
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
     </div>
