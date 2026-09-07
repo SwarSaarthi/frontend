@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
 
@@ -39,8 +40,17 @@ function TrendIcon(props: React.SVGProps<SVGSVGElement>) {
 export default function Home() {
   const { t } = useLanguage();
 
+  const steps = useMemo(
+    () => [
+      { n: "01", icon: EarIcon, title: t.step1Title, desc: t.step1Desc },
+      { n: "02", icon: MicIcon, title: t.step2Title, desc: t.step2Desc },
+      { n: "03", icon: TrendIcon, title: t.step3Title, desc: t.step3Desc },
+    ],
+    [t.step1Title, t.step1Desc, t.step2Title, t.step2Desc, t.step3Title, t.step3Desc],
+  );
+
   return (
-    <div className="animate-fade-in">
+    <div>
       {/* HERO — editorial, left-aligned, paper bg */}
       <section className="px-4 sm:px-6">
         <div className="max-w-6xl mx-auto py-10 sm:py-16 lg:py-20">
@@ -152,11 +162,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border border-line rounded-2xl overflow-hidden">
-            {[
-              { n: "01", icon: EarIcon, title: t.step1Title, desc: t.step1Desc },
-              { n: "02", icon: MicIcon, title: t.step2Title, desc: t.step2Desc },
-              { n: "03", icon: TrendIcon, title: t.step3Title, desc: t.step3Desc },
-            ].map((s, i) => (
+            {steps.map((s, i) => (
               <div
                 key={s.n}
                 className={`p-6 sm:p-7 bg-white ${i !== 2 ? "sm:border-r border-b sm:border-b-0 border-line" : ""}`}

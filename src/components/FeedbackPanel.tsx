@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { FeedbackState } from "@/types";
 
@@ -26,25 +27,29 @@ function RetryIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export default function FeedbackPanel({ feedback, expectedWord, onTryAgain, onNextWord }: FeedbackPanelProps) {
+function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: FeedbackPanelProps) {
   const { t } = useLanguage();
-  if (!feedback.isVisible) return null;
+
   const isSuccess = feedback.type === "success";
   const isTryAgain = feedback.type === "tryAgain";
 
+  // early exit — memo still helps because parent may re-render with same invisible feedback
+  if (!feedback.isVisible) return null;
+
+  const score = feedback.attempt?.score ?? 0;
+  const scoreColor = useMemo(() => {
+    if (score >= 75) return "bg-moss";
+    if (score >= 50) return "bg-ink";
+    return "bg-error";
+  }, [score]);
+
   return (
-    <div
-      className={`card p-5 sm:p-6 animate-slide-up ${
-        isSuccess ? "border-moss bg-moss-soft/40" : isTryAgain ? "bg-error-light border-error/20" : ""
-      }`}
-    >
+    <div className={`card p-5 sm:p-6 ${isSuccess ? "border-moss bg-moss-soft/40" : isTryAgain ? "bg-error-light border-error/20" : ""}`}>
       <div className="flex items-start gap-3 mb-4">
         <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${isSuccess ? "bg-moss text-white border-moss" : "bg-white border-line text-ink-soft"}`}>
           {isSuccess ? <CheckIcon className="w-4 h-4" /> : <RetryIcon className="w-4 h-4" />}
         </span>
-        <p className={`text-sm font-medium leading-6 ${isSuccess ? "text-moss" : isTryAgain ? "text-error" : "text-ink-soft"}`}>
-          {feedback.message}
-        </p>
+        <p className={`text-sm font-medium leading-6 ${isSuccess ? "text-moss" : isTryAgain ? "text-error" : "text-ink-soft"}`}>{feedback.message}</p>
       </div>
 
       {feedback.attempt && (
@@ -64,13 +69,10 @@ export default function FeedbackPanel({ feedback, expectedWord, onTryAgain, onNe
         <div className="mb-5">
           <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="text-ink-faint">{t.scoreLabel}</span>
-            <span className="font-semibold tabular-nums text-ink">{feedback.attempt.score}%</span>
+            <span className="font-semibold tabular-nums text-ink">{score}%</span>
           </div>
           <div className="w-full h-1.5 bg-stone rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full progress-fill ${feedback.attempt.score >= 75 ? "bg-moss" : feedback.attempt.score >= 50 ? "bg-ink" : "bg-error"}`}
-              style={{ width: `${feedback.attempt.score}%` }}
-            />
+            <div className={`h-full rounded-full progress-fill ${scoreColor}`} style={{ width: `${score}%` }} />
           </div>
         </div>
       )}
@@ -90,3 +92,5 @@ export default function FeedbackPanel({ feedback, expectedWord, onTryAgain, onNe
     </div>
   );
 }
+
+export default memo(FeedbackPanelInner);

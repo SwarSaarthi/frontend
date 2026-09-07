@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import { AudioRecorder } from "@/lib/audioRecorder";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { RecordingState } from "@/types";
@@ -10,7 +10,7 @@ interface MicRecorderProps {
   disabled?: boolean;
 }
 
-export default function MicRecorder({ onRecordingComplete, disabled = false }: MicRecorderProps) {
+function MicRecorderInner({ onRecordingComplete, disabled = false }: MicRecorderProps) {
   const { t } = useLanguage();
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [duration, setDuration] = useState(0);
@@ -58,12 +58,13 @@ export default function MicRecorder({ onRecordingComplete, disabled = false }: M
     }
   }, []);
 
-  const handleMicClick = () => {
+  const handleMicClick = useCallback(() => {
     if (recordingState === "recording") stopRecording();
     else if (recordingState === "idle" || recordingState === "done") startRecording();
-  };
+  }, [recordingState, startRecording, stopRecording]);
 
-  const formatDuration = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  const formatDuration = useCallback((s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`, []);
+
   const isRecording = recordingState === "recording";
   const isProcessing = recordingState === "processing";
 
@@ -93,12 +94,12 @@ export default function MicRecorder({ onRecordingComplete, disabled = false }: M
           {isRecording ? (
             <span className="w-4 h-4 bg-white rounded-sm" />
           ) : isProcessing ? (
-            <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden>
               <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
               <path className="opacity-80" fill="currentColor" d="M12 2a10 10 0 0 1 10 10h-3a7 7 0 0 0-7-7V2Z" />
             </svg>
           ) : (
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden>
               <rect x="9" y="3" width="6" height="11" rx="3" />
               <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" strokeLinecap="round" />
             </svg>
@@ -107,7 +108,7 @@ export default function MicRecorder({ onRecordingComplete, disabled = false }: M
       </div>
 
       <div className="text-center">
-        <p className={`text-xs font-medium tracking-wide ${isRecording ? "text-error" : isProcessing ? "text-ink-soft" : "text-ink-soft"}`}>
+        <p className={`text-xs font-medium tracking-wide ${isRecording ? "text-error" : "text-ink-soft"}`}>
           {isRecording ? t.recording : isProcessing ? t.processing : t.tapToRecord}
         </p>
         {isRecording && <p className="text-xs tabular-nums text-ink-faint mt-1">{formatDuration(duration)}</p>}
@@ -115,3 +116,5 @@ export default function MicRecorder({ onRecordingComplete, disabled = false }: M
     </div>
   );
 }
+
+export default memo(MicRecorderInner);

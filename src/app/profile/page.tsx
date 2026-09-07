@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import StatsCard from "@/components/StatsCard";
 import DifficultWords from "@/components/DifficultWords";
@@ -35,8 +36,21 @@ export default function ProfilePage() {
   const { t, lang } = useLanguage();
   const profile = mockUserProfile;
 
+  // format dates once per lang — avoids new Date() + toLocaleDateString on every render
+  const sessions = useMemo(
+    () =>
+      profile.recentSessions.map((s) => ({
+        ...s,
+        label: new Date(s.date).toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", {
+          day: "numeric",
+          month: "short",
+        }),
+      })),
+    [lang, profile.recentSessions],
+  );
+
   return (
-    <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-10 px-4 sm:px-6 animate-fade-in">
+    <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-10 px-4 sm:px-6">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-ink">{t.profileTitle}</h1>
@@ -78,11 +92,11 @@ export default function ProfilePage() {
         <section>
           <h2 className="text-base sm:text-lg font-bold tracking-tight text-ink mb-4">{t.recentActivityTitle}</h2>
           <div className="space-y-3">
-            {profile.recentSessions.map((session) => (
+            {sessions.map((session) => (
               <div key={session.id} className="card p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-mist border border-line flex items-center justify-center text-xs font-semibold text-ink">
-                    {new Date(session.date).toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { day: "numeric", month: "short" })}
+                    {session.label}
                   </div>
                   <div>
                     <p className="text-sm font-medium text-ink">

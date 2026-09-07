@@ -68,6 +68,7 @@
 
   --animate-fade-in: fade-in 0.35s ease;
   --animate-slide-up: slide-up 0.35s ease;
+  --animate-page-in: page-in 180ms ease-out;
 }
 
 /* ============================================================
@@ -84,6 +85,22 @@
 @keyframes pulse-soft {
   0% { transform: scale(1); opacity: 0.35; }
   100% { transform: scale(1.45); opacity: 0; }
+}
+/* Page transition — subtle, natural, not AI-spring */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-page-in {
+  animation: page-in 180ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in,
+  .animate-fade-in,
+  .animate-slide-up {
+    animation: none !important;
+  }
+  .progress-fill { transition: none !important; }
 }
 
 /* ============================================================

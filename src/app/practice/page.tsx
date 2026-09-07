@@ -21,14 +21,21 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { useLanguage } from "@/components/LanguageProvider";
 import WordCard from "@/components/WordCard";
-import MicRecorder from "@/components/MicRecorder";
 import FeedbackPanel from "@/components/FeedbackPanel";
 import ProgressBar from "@/components/ProgressBar";
 import { practiceWords } from "@/lib/mockData";
 import type { FeedbackState, PronunciationAttempt } from "@/types";
+
+// MicRecorder is heavy (MediaRecorder + interval) and only needed in /practice.
+// Dynamic import keeps its JS out of the home/profile bundles.
+const MicRecorder = dynamic(() => import("@/components/MicRecorder"), {
+  ssr: false,
+  loading: () => <div className="h-[104px] flex items-center justify-center text-xs text-ink-faint">Loading mic…</div>,
+});
 
 export default function PracticePage() {
   const { t } = useLanguage();
@@ -40,8 +47,11 @@ export default function PracticePage() {
     type: "neutral",
   });
 
-  const currentWord = practiceWords[currentIndex];
+  // memo so reference stable unless index changes — prevents WordCard/MicRecorder
+  // re-render cascades when only feedback changes.
+  const currentWord = useMemo(() => practiceWords[currentIndex], [currentIndex]);
   const totalWords = practiceWords.length;
+  const isSuccess = feedback.type === "success";
 
   /**
    * Handle recording completion.
@@ -130,7 +140,7 @@ export default function PracticePage() {
   }, [t, totalWords]);
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-10 px-4 sm:px-6 animate-fade-in">
+    <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-10 px-4 sm:px-6">
       <div className="max-w-xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-ink">{t.practiceTitle}</h1>
@@ -145,7 +155,7 @@ export default function PracticePage() {
         </div>
 
         <div className="mb-6">
-          <WordCard word={currentWord} isCorrect={feedback.type === "success"} />
+          <WordCard word={currentWord} isCorrect={isSuccess} />
         </div>
 
         <div className="mb-6">
