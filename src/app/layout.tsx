@@ -13,7 +13,6 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import localFont from "next/font/local";
 import { Noto_Sans_Devanagari, Plus_Jakarta_Sans } from "next/font/google";
-import CursorFollower from "@/components/CursorFollower";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -78,7 +77,6 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
         <LanguageProvider>
-          <CursorFollower />
           <Navbar />
           <main className="flex-1">
             <PageTransition>{children}</PageTransition>

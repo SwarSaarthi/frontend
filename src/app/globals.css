@@ -56,8 +56,12 @@
   --color-error: #d4726a;
   --color-error-light: #fdecea;
 
-  --font-sans: var(--font-plus-jakarta), var(--font-quicksand), "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
-  --font-hindi: var(--font-noto-sans-devanagari), "Noto Sans Devanagari", "Mangal", sans-serif;
+  --font-sans:
+    var(--font-plus-jakarta), var(--font-quicksand), "Plus Jakarta Sans",
+    "Segoe UI", system-ui, sans-serif;
+  --font-hindi:
+    var(--font-noto-sans-devanagari), "Noto Sans Devanagari", "Mangal",
+    sans-serif;
 
   --animate-fade-in: fade-in 0.35s ease-out;
   --animate-slide-up: slide-up 0.35s ease-out;
@@ -69,68 +73,144 @@
    Keyframe Animations
    ============================================================ */
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(1); opacity: 0.6; }
-  100% { transform: scale(1.8); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
 }
 
 @keyframes bounce-gentle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 @keyframes float-up-down {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-12px) rotate(2deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(2deg);
+  }
 }
 
 @keyframes blob-morph {
-  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-  50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  0%,
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  50% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
 }
 
 @keyframes wave-pulse {
-  0%, 100% { transform: scaleY(0.4); }
-  50% { transform: scaleY(1.2); }
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1.2);
+  }
 }
 
 @keyframes page-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes draw-spark {
-  0% { stroke-dashoffset: 160; }
-  40% { stroke-dashoffset: 0; }
-  78% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: 160; }
+  0% {
+    stroke-dashoffset: 160;
+  }
+  40% {
+    stroke-dashoffset: 0;
+  }
+  78% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 160;
+  }
 }
 
 @keyframes spark-tip {
-  0%, 38% { opacity: 0; transform: scale(0.4); }
-  48%, 78% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.4); }
+  0%,
+  38% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  48%,
+  78% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
 }
 
 @keyframes hiw-flow {
-  0% { transform: translateX(-12%); opacity: 0; }
-  12% { opacity: 1; }
-  88% { opacity: 1; }
-  100% { transform: translateX(112%); opacity: 0; }
+  0% {
+    transform: translateX(-12%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(112%);
+    opacity: 0;
+  }
 }
 
 @keyframes bar-wave {
-  0%, 100% { transform: scaleY(0.35); }
-  50% { transform: scaleY(1); }
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
 }
 
 .animate-page-in {
@@ -205,11 +285,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-  background-image: 
+  background-image:
     radial-gradient(rgba(198, 93, 62, 0.03) 1px, transparent 1px),
     radial-gradient(rgba(90, 143, 123, 0.03) 1px, transparent 1px);
   background-size: 32px 32px;
-  background-position: 0 0, 16px 16px;
+  background-position:
+    0 0,
+    16px 16px;
 }
 
 .font-hindi {
@@ -233,12 +315,16 @@ body {
   background: white;
   border: 1px solid #f4e8dd;
   border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(198, 93, 62, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow:
+    0 4px 20px rgba(198, 93, 62, 0.05),
+    0 1px 3px rgba(0, 0, 0, 0.02);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .card-warm:hover {
-  box-shadow: 0 12px 30px rgba(198, 93, 62, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 12px 30px rgba(198, 93, 62, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .underline-hand-drawn {
@@ -253,7 +339,8 @@ body {
   bottom: -4px;
   width: 100%;
   height: 8px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'%3E%3Cpath d='M0 15 Q 25 5, 50 15 T 100 15' stroke='%23F4A27A' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center bottom;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'%3E%3Cpath d='M0 15 Q 25 5, 50 15 T 100 15' stroke='%23F4A27A' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")
+    no-repeat center bottom;
   background-size: 100% 100%;
 }
 
@@ -295,7 +382,10 @@ body {
   color: white;
   border-radius: 999px;
   font-weight: 600;
-  transition: background 150ms ease, transform 150ms ease, opacity 150ms ease;
+  transition:
+    background 150ms ease,
+    transform 150ms ease,
+    opacity 150ms ease;
 }
 
 .btn-primary:hover {
@@ -311,7 +401,9 @@ body {
   border: 1px solid var(--color-line);
   border-radius: 999px;
   font-weight: 500;
-  transition: border-color 150ms ease, background 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
 }
 
 .btn-ghost:hover {
@@ -348,3 +440,44 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #c65d3e;
 }
+
+/* ============================================================
+   Ticker Animation
+   ============================================================ */
+@keyframes tickerScroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: tickerScroll 120s linear infinite;
+}
+
+.ticker-mask:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+.ticker-mask {
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent
+    #000 5%,
+    #000 95%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 5%,
+    #000 95%,
+    transparent
+  );
+}
+

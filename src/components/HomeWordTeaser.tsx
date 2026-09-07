@@ -65,9 +65,10 @@ export default function HomeWordTeaser() {
   return (
     <div className="w-full max-w-5xl mx-auto my-6 font-sans">
       <div className="text-center mb-8">
-        
         <h3 className="text-2xl sm:text-4xl font-extrabold text-zinc-900">
-          {isHindi ? "नमूना शब्दों का उच्चारण सुनें" : "Try Listening to Sample Words"}
+          {isHindi
+            ? "नमूना शब्दों का उच्चारण सुनें"
+            : "Try Listening to Sample Words"}
         </h3>
         <p className="text-sm sm:text-base text-zinc-800 mt-1 font-medium">
           {isHindi
@@ -89,7 +90,7 @@ export default function HomeWordTeaser() {
                   setActiveWord(item);
                   handlePlayAudio(item.text);
                 }}
-                className={`w-full text-left p-6 rounded-xl border transition-all duration-300 relative overflow-hidden group ${
+                className={`w-full text-left p-6 rounded-xl transition-all duration-300 relative overflow-hidden group ${
                   isSelected
                     ? "bg-white/85 backdrop-blur-md border-primary shadow-xl ring-2 ring-primary/30"
                     : "bg-white/50 backdrop-blur-md border-white/80 hover:border-primary-200 hover:bg-white/70 hover:shadow-lg"
@@ -140,8 +141,8 @@ export default function HomeWordTeaser() {
                         ? "सुन रहे हैं..."
                         : "Listening..."
                       : isHindi
-                      ? "सुनने के लिए टैप करें"
-                      : "Tap to Listen"}
+                        ? "सुनने के लिए टैप करें"
+                        : "Tap to Listen"}
                   </span>
                 </div>
 
