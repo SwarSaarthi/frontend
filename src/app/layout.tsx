@@ -9,16 +9,22 @@
  */
 
 import type { Metadata } from "next";
-import { Poppins, Noto_Sans_Devanagari } from "next/font/google";
+import localFont from "next/font/local";
+import { Noto_Sans_Devanagari } from "next/font/google";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import "./globals.css";
 
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+const quicksand = localFont({
+  src: [
+    {
+      path: "../../fonts/Quicksand-VariableFont_wght.ttf",
+      weight: "300 700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-quicksand",
   display: "swap",
 });
 
@@ -49,9 +55,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${poppins.variable} ${notoDevanagari.variable} h-full antialiased`}
+      className={`${quicksand.variable} ${notoDevanagari.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-warm-cream text-text-primary">
+      <body className="min-h-full flex flex-col bg-paper text-ink">
         <LanguageProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
