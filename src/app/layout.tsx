@@ -9,16 +9,17 @@
  */
 
 import type { Metadata } from "next";
-import { Poppins, Noto_Sans_Devanagari } from "next/font/google";
+import { Plus_Jakarta_Sans, Noto_Sans_Devanagari } from "next/font/google";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import CursorFollower from "@/components/CursorFollower";
 import "./globals.css";
 
-const poppins = Poppins({
-  variable: "--font-poppins",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -30,7 +31,7 @@ const notoDevanagari = Noto_Sans_Devanagari({
 });
 
 export const metadata: Metadata = {
-  title: "SwarSaarthi — AI-Powered Speech Assistive System | स्वर सारथी",
+  title: "SwarSaarthi - AI Powered Speech Assistive System | स्वर सारथी",
   description:
     "SwarSaarthi is an AI-powered speech assistive system that helps individuals improve their Hindi pronunciation through personalized practice and real-time feedback. This is an assistive tool, not a diagnostic system.",
   keywords: [
@@ -49,10 +50,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${poppins.variable} ${notoDevanagari.variable} h-full antialiased`}
+      className={`${plusJakarta.variable} ${notoDevanagari.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-warm-cream text-text-primary">
         <LanguageProvider>
+          <CursorFollower />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
@@ -61,3 +63,5 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     </html>
   );
 }
+
+

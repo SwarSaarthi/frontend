@@ -45,7 +45,7 @@
   --color-error-light: #fdecea;
 
   /* --- Fonts --- */
-  --font-sans: var(--font-poppins), "Segoe UI", system-ui, sans-serif;
+  --font-sans: var(--font-plus-jakarta), "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
   --font-hindi:
     var(--font-noto-sans-devanagari), "Noto Sans Devanagari", "Mangal",
     sans-serif;
@@ -73,7 +73,7 @@
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -98,31 +98,40 @@
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-8px);
   }
 }
 
 @keyframes float-up-down {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translateY(0) rotate(0deg);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-12px) rotate(2deg);
   }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
+@keyframes blob-morph {
+  0%, 100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
   }
-  100% {
-    background-position: 200% 0;
+  50% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
+}
+
+@keyframes wave-pulse {
+  0%, 100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1.2);
   }
 }
 
 /* ============================================================
-   Base Styles
+   Base Styles & Background Textures
    ============================================================ */
 :root {
   --background: #fff8f0;
@@ -139,6 +148,11 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-image: 
+    radial-gradient(rgba(198, 93, 62, 0.03) 1px, transparent 1px),
+    radial-gradient(rgba(90, 143, 123, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
 }
 
 /* Hindi text gets the Devanagari font */
@@ -147,23 +161,43 @@ body {
 }
 
 /* ============================================================
-   Custom Utility Classes
+   Custom Utility Classes for Human-Touch Aesthetic
    ============================================================ */
 
-/* Warm card surface with subtle shadow */
+/* Organic blob shape generator */
+.blob-shape {
+  animation: blob-morph 12s ease-in-out infinite;
+  transition: all 0.5s ease;
+}
+
+/* Warm card surface with subtle tactile shadow */
 .card-warm {
   background: white;
   border: 1px solid #f4e8dd;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(198, 93, 62, 0.06);
-  transition:
-    box-shadow 0.3s ease,
-    transform 0.3s ease;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(198, 93, 62, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .card-warm:hover {
-  box-shadow: 0 4px 20px rgba(198, 93, 62, 0.12);
-  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(198, 93, 62, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* Hand-drawn style decorative underline accent */
+.underline-hand-drawn {
+  position: relative;
+  display: inline-block;
+}
+
+.underline-hand-drawn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 8px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'%3E%3Cpath d='M0 15 Q 25 5, 50 15 T 100 15' stroke='%23F4A27A' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center bottom;
+  background-size: 100% 100%;
 }
 
 /* Mic button pulse animation */
@@ -191,21 +225,15 @@ body {
 
 /* Smooth gradient background for hero sections */
 .gradient-warm {
-  background: linear-gradient(135deg, #fff8f0 0%, #ffe8db 40%, #fff1e6 100%);
+  background: linear-gradient(135deg, #fff8f0 0%, #ffe8db 45%, #fff1e6 100%);
 }
 
-/* Success glow for correct pronunciation */
-.glow-success {
-  box-shadow:
-    0 0 20px rgba(90, 143, 123, 0.3),
-    0 0 40px rgba(90, 143, 123, 0.1);
-}
-
-/* Error/retry gentle glow */
-.glow-error {
-  box-shadow:
-    0 0 20px rgba(212, 114, 106, 0.3),
-    0 0 40px rgba(212, 114, 106, 0.1);
+/* Glassmorphic warm card */
+.glass-warm {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 /* Progress bar fill animation */
@@ -217,7 +245,7 @@ body {
    Scrollbar Styling (warm tones)
    ============================================================ */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -226,9 +254,11 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: #f4a27a;
-  border-radius: 4px;
+  border-radius: 6px;
+  border: 2px solid #fff1e6;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #c65d3e;
 }
+
