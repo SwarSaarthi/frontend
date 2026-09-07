@@ -1,23 +1,3 @@
-/**
- * SwarSaarthi — MicRecorder Component
- *
- * Central recording UI for the practice room. Handles:
- *  - Microphone permission request
- *  - Visual recording state (idle → recording → processing)
- *  - Animated pulse ring while recording
- *  - Timer showing recording duration
- *  - Returns audio blob for processing
- *
- * FUTURE BACKEND INTEGRATION:
- *  When the backend is ready, the audio blob from onRecordingComplete
- *  should be sent to POST /api/asr as FormData:
- *
- *    const formData = new FormData();
- *    formData.append("audio", blob, "recording.webm");
- *    const res = await fetch("/api/asr", { method: "POST", body: formData });
- *    const { transcribedText, confidence } = await res.json();
- */
-
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -26,23 +6,17 @@ import { useLanguage } from "@/components/LanguageProvider";
 import type { RecordingState } from "@/types";
 
 interface MicRecorderProps {
-  /** Called when recording is complete with the audio blob */
   onRecordingComplete: (blob: Blob) => void;
-  /** Whether the component is disabled (e.g., during feedback display) */
   disabled?: boolean;
 }
 
-export default function MicRecorder({
-  onRecordingComplete,
-  disabled = false,
-}: MicRecorderProps) {
+export default function MicRecorder({ onRecordingComplete, disabled = false }: MicRecorderProps) {
   const { t } = useLanguage();
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [duration, setDuration] = useState(0);
   const recorderRef = useRef<AudioRecorder | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Clean up on unmount
   useEffect(() => {
     return () => {
       recorderRef.current?.destroy();
@@ -52,10 +26,8 @@ export default function MicRecorder({
 
   const startRecording = useCallback(async () => {
     if (disabled) return;
-
     setDuration(0);
     setRecordingState("recording");
-
     const recorder = new AudioRecorder({
       onStatusChange: (status) => {
         if (status === "error") {
@@ -66,7 +38,6 @@ export default function MicRecorder({
       onDataAvailable: (blob) => {
         setRecordingState("processing");
         onRecordingComplete(blob);
-        // After a brief "processing" visual, return to idle
         setTimeout(() => setRecordingState("done"), 500);
       },
       onError: (error) => {
@@ -74,14 +45,9 @@ export default function MicRecorder({
         setRecordingState("idle");
       },
     });
-
     recorderRef.current = recorder;
     await recorder.startRecording();
-
-    // Start duration timer
-    timerRef.current = setInterval(() => {
-      setDuration((d) => d + 1);
-    }, 1000);
+    timerRef.current = setInterval(() => setDuration((d) => d + 1), 1000);
   }, [disabled, onRecordingComplete]);
 
   const stopRecording = useCallback(() => {
@@ -93,122 +59,58 @@ export default function MicRecorder({
   }, []);
 
   const handleMicClick = () => {
-    if (recordingState === "recording") {
-      stopRecording();
-    } else if (recordingState === "idle" || recordingState === "done") {
-      startRecording();
-    }
+    if (recordingState === "recording") stopRecording();
+    else if (recordingState === "idle" || recordingState === "done") startRecording();
   };
 
-  // Format seconds as MM:SS
-  const formatDuration = (seconds: number): string => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  };
-
+  const formatDuration = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const isRecording = recordingState === "recording";
   const isProcessing = recordingState === "processing";
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      {/* Mic Button with Pulse Animation */}
+    <div className="flex flex-col items-center gap-3">
       <div className="relative">
-        {/* Pulse rings — visible only while recording */}
         {isRecording && (
           <>
-            <span className="absolute inset-0 rounded-full bg-primary/20 animate-pulse-ring" />
-            <span
-              className="absolute inset-0 rounded-full bg-primary/10 animate-pulse-ring"
-              style={{ animationDelay: "0.5s" }}
-            />
+            <span className="absolute inset-0 rounded-full border border-clay/20" style={{ animation: "pulse-soft 1.4s ease-out infinite" }} />
+            <span className="absolute inset-0 rounded-full border border-clay/10" style={{ animation: "pulse-soft 1.4s ease-out 0.35s infinite" }} />
           </>
         )}
-
         <button
           onClick={handleMicClick}
           disabled={disabled || isProcessing}
-          className={`relative z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center text-3xl sm:text-4xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-primary-200 ${
+          className={`relative z-10 w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-full flex items-center justify-center transition-colors duration-150 border ${
             isRecording
-              ? "bg-error text-white shadow-lg scale-110"
+              ? "bg-error text-white border-error"
               : isProcessing
-                ? "bg-accent text-white cursor-wait"
+                ? "bg-mist text-ink-soft border-line cursor-wait"
                 : disabled
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-primary text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+                  ? "bg-mist text-ink-faint border-line cursor-not-allowed"
+                  : "bg-ink text-white border-ink hover:bg-black"
           }`}
-          aria-label={
-            isRecording
-              ? t.stopRecording
-              : isProcessing
-                ? t.processing
-                : t.tapToRecord
-          }
+          aria-label={isRecording ? t.stopRecording : isProcessing ? t.processing : t.tapToRecord}
         >
           {isRecording ? (
-            // Stop icon (square)
-            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-              <rect x="6" y="6" width="12" height="12" rx="2" />
-            </svg>
+            <span className="w-4 h-4 bg-white rounded-sm" />
           ) : isProcessing ? (
-            // Spinner
-            <svg
-              className="w-8 h-8 animate-spin"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              />
+            <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+              <path className="opacity-80" fill="currentColor" d="M12 2a10 10 0 0 1 10 10h-3a7 7 0 0 0-7-7V2Z" />
             </svg>
           ) : (
-            // Mic icon
-            <svg
-              className="w-8 h-8 sm:w-10 sm:h-10"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+              <rect x="9" y="3" width="6" height="11" rx="3" />
+              <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" strokeLinecap="round" />
             </svg>
           )}
         </button>
       </div>
 
-      {/* Status Text & Timer */}
       <div className="text-center">
-        <p
-          className={`text-sm font-medium ${
-            isRecording
-              ? "text-error"
-              : isProcessing
-                ? "text-accent"
-                : "text-text-secondary"
-          }`}
-        >
-          {isRecording
-            ? t.recording
-            : isProcessing
-              ? t.processing
-              : t.tapToRecord}
+        <p className={`text-xs font-medium tracking-wide ${isRecording ? "text-error" : isProcessing ? "text-ink-soft" : "text-ink-soft"}`}>
+          {isRecording ? t.recording : isProcessing ? t.processing : t.tapToRecord}
         </p>
-
-        {/* Recording duration timer */}
-        {isRecording && (
-          <p className="text-xs text-text-muted mt-1 font-mono">
-            {formatDuration(duration)}
-          </p>
-        )}
+        {isRecording && <p className="text-xs tabular-nums text-ink-faint mt-1">{formatDuration(duration)}</p>}
       </div>
     </div>
   );
