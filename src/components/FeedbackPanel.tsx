@@ -1,21 +1,6 @@
-/**
- * SwarSaarthi — FeedbackPanel Component
- *
- * Shows pronunciation feedback after a recording attempt.
- * Displays:
- *  - Success/retry status with appropriate styling
- *  - What the user said vs what was expected (mock for now)
- *  - Score indicator
- *  - Action buttons (Try Again / Next Word)
- *
- * FUTURE BACKEND INTEGRATION:
- *  The feedback data will come from the NLP comparison endpoint:
- *    POST /api/compare → { score, isCorrect, feedback, recognizedText }
- *  Currently using mock random results for UI demonstration.
- */
-
 "use client";
 
+import { memo, useMemo } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { FeedbackState } from "@/types";
 
@@ -26,119 +11,86 @@ interface FeedbackPanelProps {
   onNextWord: () => void;
 }
 
-export default function FeedbackPanel({
-  feedback,
-  expectedWord,
-  onTryAgain,
-  onNextWord,
-}: FeedbackPanelProps) {
-  const { t } = useLanguage();
+function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} {...props}>
+      <path d="M6 12l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function RetryIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} {...props}>
+      <path d="M20 12a8 8 0 1 1-2.3-5.7" strokeLinecap="round" />
+      <path d="M20 4v6h-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
-  if (!feedback.isVisible) return null;
+function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: FeedbackPanelProps) {
+  const { t } = useLanguage();
 
   const isSuccess = feedback.type === "success";
   const isTryAgain = feedback.type === "tryAgain";
 
+  // early exit — memo still helps because parent may re-render with same invisible feedback
+  if (!feedback.isVisible) return null;
+
+  const score = feedback.attempt?.score ?? 0;
+  const scoreColor = useMemo(() => {
+    if (score >= 75) return "bg-moss";
+    if (score >= 50) return "bg-ink";
+    return "bg-error";
+  }, [score]);
+
   return (
-    <div
-      className={`card-warm p-6 animate-slide-up ${
-        isSuccess
-          ? "border-success bg-success-light/30"
-          : isTryAgain
-            ? "border-error bg-error-light/30"
-            : ""
-      }`}
-    >
-      {/* Feedback icon & message */}
-      <div className="text-center mb-4">
-        <span className="text-4xl mb-2 block">
-          {isSuccess ? "🎉" : isTryAgain ? "💪" : "🎤"}
+    <div className={`card p-5 sm:p-6 ${isSuccess ? "border-moss bg-moss-soft/40" : isTryAgain ? "bg-error-light border-error/20" : ""}`}>
+      <div className="flex items-start gap-3 mb-4">
+        <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${isSuccess ? "bg-moss text-white border-moss" : "bg-white border-line text-ink-soft"}`}>
+          {isSuccess ? <CheckIcon className="w-4 h-4" /> : <RetryIcon className="w-4 h-4" />}
         </span>
-        <p
-          className={`text-base font-medium ${
-            isSuccess
-              ? "text-success"
-              : isTryAgain
-                ? "text-error"
-                : "text-text-secondary"
-          }`}
-        >
-          {feedback.message}
-        </p>
+        <p className={`text-sm font-medium leading-6 ${isSuccess ? "text-moss" : isTryAgain ? "text-error" : "text-ink-soft"}`}>{feedback.message}</p>
       </div>
 
-      {/* Comparison: What user said vs expected */}
       {feedback.attempt && (
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          {/* User's pronunciation */}
-          <div
-            className={`flex-1 p-3 rounded-xl text-center ${
-              isSuccess ? "bg-success/10" : "bg-error/10"
-            }`}
-          >
-            <p className="text-xs text-text-muted mb-1">
-              {t.yourPronunciation}
-            </p>
-            <p className="text-lg font-hindi font-semibold text-text-primary">
-              {feedback.attempt.recognizedText}
-            </p>
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="rounded-xl border border-line bg-white p-3 text-center">
+            <p className="text-[11px] tracking-wide uppercase text-ink-faint mb-1">{t.yourPronunciation}</p>
+            <p className="text-base font-hindi font-semibold text-ink">{feedback.attempt.recognizedText}</p>
           </div>
-
-          {/* Expected pronunciation */}
-          <div className="flex-1 p-3 rounded-xl text-center bg-primary-50">
-            <p className="text-xs text-text-muted mb-1">
-              {t.expectedPronunciation}
-            </p>
-            <p className="text-lg font-hindi font-semibold text-primary">
-              {expectedWord}
-            </p>
+          <div className="rounded-xl border border-line bg-mist p-3 text-center">
+            <p className="text-[11px] tracking-wide uppercase text-ink-faint mb-1">{t.expectedPronunciation}</p>
+            <p className="text-base font-hindi font-semibold text-ink">{expectedWord}</p>
           </div>
         </div>
       )}
 
-      {/* Score indicator */}
       {feedback.attempt && (
         <div className="mb-5">
-          <div className="flex items-center justify-between text-xs text-text-muted mb-1.5">
-            <span>{t.scoreLabel}</span>
-            <span className="font-semibold text-text-primary">
-              {feedback.attempt.score}%
-            </span>
+          <div className="flex items-center justify-between text-xs mb-1.5">
+            <span className="text-ink-faint">{t.scoreLabel}</span>
+            <span className="font-semibold tabular-nums text-ink">{score}%</span>
           </div>
-          <div className="w-full h-2.5 bg-primary-100 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full progress-fill ${
-                feedback.attempt.score >= 80
-                  ? "bg-success"
-                  : feedback.attempt.score >= 50
-                    ? "bg-accent"
-                    : "bg-error"
-              }`}
-              style={{ width: `${feedback.attempt.score}%` }}
-            />
+          <div className="w-full h-1.5 bg-stone rounded-full overflow-hidden">
+            <div className={`h-full rounded-full progress-fill ${scoreColor}`} style={{ width: `${score}%` }} />
           </div>
         </div>
       )}
 
-      {/* Action buttons */}
-      <div className="flex gap-3 justify-center">
+      <div className="flex gap-2 justify-center">
         {isTryAgain && (
-          <button
-            onClick={onTryAgain}
-            className="px-5 py-2.5 rounded-full text-sm font-medium bg-primary text-white hover:bg-primary-dark active:scale-95 transition-all shadow-sm"
-          >
+          <button onClick={onTryAgain} className="px-5 py-2 rounded-full text-sm font-medium bg-ink text-white hover:bg-black transition-colors duration-150">
             {t.tryAgain}
           </button>
         )}
         {isSuccess && (
-          <button
-            onClick={onNextWord}
-            className="px-5 py-2.5 rounded-full text-sm font-medium bg-success text-white hover:bg-secondary-dark active:scale-95 transition-all shadow-sm"
-          >
-            {t.nextWord} →
+          <button onClick={onNextWord} className="px-5 py-2 rounded-full text-sm font-medium bg-moss text-white hover:bg-[#1e2e26] transition-colors duration-150 inline-flex items-center gap-1.5">
+            {t.nextWord} <span aria-hidden>→</span>
           </button>
         )}
       </div>
     </div>
   );
 }
+
+export default memo(FeedbackPanelInner);

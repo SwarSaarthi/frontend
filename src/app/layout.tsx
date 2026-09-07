@@ -9,6 +9,26 @@
  */
 
 import type { Metadata } from "next";
+import localFont from "next/font/local";
+import { Noto_Sans_Devanagari } from "next/font/google";
+import { LanguageProvider } from "@/components/LanguageProvider";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import PageTransition from "@/components/PageTransition";
+import "./globals.css";
+
+// Quicksand variable — only weights actually used (400 regular, 600 semibold, 700 bold)
+// One TTF serves all, but limiting range lets Next generate a smaller subset slice
+// and avoids shipping 300 Light never used in UI.
+const quicksand = localFont({
+  src: [
+    {
+      path: "../../fonts/Quicksand-VariableFont_wght.ttf",
+      weight: "400 700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-quicksand",
 import { Plus_Jakarta_Sans, Noto_Sans_Devanagari } from "next/font/google";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import Navbar from "@/components/Navbar";
@@ -21,13 +41,17 @@ const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   display: "swap",
+  preload: true,
 });
 
+// Noto Devanagari — only 400 + 600 needed (body + heading). 500/700 removed
+// to halve Google font payload; next/font self-hosts so no runtime CDN hit.
 const notoDevanagari = Noto_Sans_Devanagari({
   variable: "--font-noto-sans-devanagari",
   subsets: ["devanagari"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -50,13 +74,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      className={`${quicksand.variable} ${notoDevanagari.variable} h-full antialiased`}
       className={`${plusJakarta.variable} ${notoDevanagari.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-warm-cream text-text-primary">
+      <body className="min-h-full flex flex-col bg-paper text-ink">
         <LanguageProvider>
           <CursorFollower />
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1">
+            <PageTransition>{children}</PageTransition>
+          </main>
           <Footer />
         </LanguageProvider>
       </body>

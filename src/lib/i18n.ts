@@ -96,9 +96,9 @@ export const i18n = {
     transliterationLabel: "Transliteration",
 
     // Feedback
-    feedbackCorrect: "Excellent! You pronounced it correctly! 🎉",
+    feedbackCorrect: "Excellent — you pronounced it correctly.",
     feedbackTryAgain:
-      "Almost there! Let's try again. Listen carefully and repeat. 💪",
+      "Almost there — listen carefully and try again.",
     feedbackNeutral: "Press the mic button and speak the word shown above.",
     yourPronunciation: "You said",
     expectedPronunciation: "Expected",
@@ -214,10 +214,10 @@ export const i18n = {
     transliterationLabel: "लिप्यंतरण",
 
     // Feedback
-    feedbackCorrect: "बहुत बढ़िया! आपने सही उच्चारण किया! 🎉",
+    feedbackCorrect: "बहुत बढ़िया — आपने सही उच्चारण किया।",
     feedbackTryAgain:
-      "लगभग सही! फिर से प्रयास करें। ध्यान से सुनें और दोहराएँ। 💪",
-    feedbackNeutal: "माइक बटन दबाएँ और ऊपर दिखाया गया शब्द बोलें।",
+      "लगभग सही — ध्यान से सुनें और फिर से प्रयास करें।",
+    feedbackNeutral: "माइक बटन दबाएँ और ऊपर दिखाया गया शब्द बोलें।",
     yourPronunciation: "आपने कहा",
     expectedPronunciation: "अपेक्षित",
     scoreLabel: "अंक",
@@ -246,4 +246,4 @@ export const i18n = {
   },
 } as const;
 
-export type I18nStrings = (typeof i18n)["en"];
+export type I18nStrings = (typeof i18n)[keyof typeof i18n];

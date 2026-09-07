@@ -1,108 +1,72 @@
-/**
- * SwarSaarthi — WordCard Component
- *
- * Displays the current Hindi word prominently in the practice room.
- * Features:
- *  - Large Devanagari text display
- *  - Romanized transliteration hint below
- *  - Meaning in English/Hindi (based on UI language)
- *  - "Listen" button to hear correct pronunciation via TTS
- *
- * TODO: When backend TTS is ready, replace speakHindi() with:
- *   const audio = new Audio(`/api/tts/${word.id}`);
- *   audio.play();
- */
-
 "use client";
 
-import { useState } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import { speakHindi } from "@/lib/audioRecorder";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { Word } from "@/types";
 
 interface WordCardProps {
   word: Word;
-  /** Whether the word was just pronounced correctly (triggers success glow) */
   isCorrect?: boolean;
 }
 
-export default function WordCard({ word, isCorrect }: WordCardProps) {
+function SpeakerIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} {...props}>
+      <path d="M11 5L7 9H3v6h4l4 4V5Z" strokeLinejoin="round" />
+      <path d="M14 9a4 4 0 0 1 0 6M17 7a7 7 0 0 1 0 10" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function WordCardInner({ word, isCorrect }: WordCardProps) {
   const { t, lang } = useLanguage();
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const handleListen = async () => {
+  const handleListen = useCallback(async () => {
     if (isSpeaking) return;
     setIsSpeaking(true);
     try {
-      /**
-       * TODO: Replace with backend TTS when available:
-       *   const audioUrl = await fetch(`/api/tts/${word.id}`).then(r => r.blob());
-       *   const audio = new Audio(URL.createObjectURL(audioUrl));
-       *   await audio.play();
-       */
       await speakHindi(word.word);
     } catch (error) {
       console.error("TTS error:", error);
     } finally {
       setIsSpeaking(false);
     }
-  };
+  }, [isSpeaking, word.word]);
+
+  // meaning is derived — memo to avoid string concat on every parent re-render
+  const meaning = useMemo(() => (lang === "hi" ? word.meaningHi : word.meaningEn), [lang, word.meaningHi, word.meaningEn]);
 
   return (
-    <div
-      className={`card-warm p-8 sm:p-10 text-center transition-all duration-500 ${
-        isCorrect ? "glow-success border-success" : ""
-      }`}
-    >
-      {/* Difficulty indicator — small dots */}
-      <div className="flex justify-center gap-1 mb-4">
+    <div className={`card p-7 sm:p-8 text-center transition-colors duration-150 ${isCorrect ? "border-moss bg-moss-soft" : ""}`}>
+      <div className="flex justify-center gap-1 mb-5" aria-hidden>
         {Array.from({ length: 5 }).map((_, i) => (
-          <span
-            key={i}
-            className={`w-2 h-2 rounded-full transition-colors ${
-              i < word.difficulty ? "bg-accent" : "bg-primary-100"
-            }`}
-            title={`Difficulty: ${word.difficulty}/5`}
-          />
+          <span key={i} className={`w-1.5 h-1.5 rounded-full ${i < word.difficulty ? "bg-ink" : "bg-stone"}`} />
         ))}
       </div>
 
-      {/* Main Hindi word — large and prominent */}
-      <h2 className="text-5xl sm:text-7xl font-bold font-hindi text-text-primary mb-4 animate-fade-in">
-        {word.word}
-      </h2>
-
-      {/* Transliteration */}
-      <p className="text-lg text-text-secondary italic mb-2">
-        {word.transliteration}
+      <h2 className="text-5xl sm:text-6xl font-bold font-hindi text-ink leading-none tracking-tight">{word.word}</h2>
+      <p className="text-sm text-ink-soft italic mt-3">{word.transliteration}</p>
+      <p className="text-xs text-ink-faint mt-2">
+        <span className="font-medium text-ink-soft">{t.meaningLabel}:</span> {meaning}
       </p>
 
-      {/* Meaning */}
-      <p className="text-sm text-text-muted mb-6">
-        <span className="font-medium text-text-secondary">
-          {t.meaningLabel}:
-        </span>{" "}
-        {lang === "hi" ? word.meaningHi : word.meaningEn}
-      </p>
+      <div className="rule my-6" />
 
-      {/* Listen button — plays TTS pronunciation */}
       <button
         onClick={handleListen}
         disabled={isSpeaking}
-        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-          isSpeaking
-            ? "bg-primary-100 text-primary cursor-wait"
-            : "bg-primary-50 text-primary hover:bg-primary-100 hover:shadow-sm active:scale-95"
+        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border transition-colors duration-150 ${
+          isSpeaking ? "bg-mist border-line text-ink-soft cursor-wait" : "bg-white border-line text-ink hover:border-stone-strong hover:bg-mist"
         }`}
         aria-label={t.listenCorrect}
       >
-        <span
-          className={`text-lg ${isSpeaking ? "animate-bounce-gentle" : ""}`}
-        >
-          🔊
-        </span>
-        {t.listenCorrect}
+        <SpeakerIcon className={`w-4 h-4 ${isSpeaking ? "opacity-60" : "text-ink-soft"}`} />
+        {isSpeaking ? "..." : t.listenCorrect}
       </button>
     </div>
   );
 }
+
+export default memo(WordCardInner);
