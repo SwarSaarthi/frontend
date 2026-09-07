@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 
 interface ProgressBarProps {
@@ -7,9 +8,9 @@ interface ProgressBarProps {
   total: number;
 }
 
-export default function ProgressBar({ current, total }: ProgressBarProps) {
+function ProgressBar({ current, total }: ProgressBarProps) {
   const { t } = useLanguage();
-  const progress = total > 0 ? ((current + 1) / total) * 100 : 0;
+  const progress = useMemo(() => (total > 0 ? ((current + 1) / total) * 100 : 0), [current, total]);
 
   return (
     <div className="w-full">
@@ -20,11 +21,10 @@ export default function ProgressBar({ current, total }: ProgressBarProps) {
         <span className="text-xs tabular-nums text-ink-faint">{Math.round(progress)}%</span>
       </div>
       <div className="w-full h-1.5 bg-stone rounded-full overflow-hidden">
-        <div
-          className="h-full bg-ink rounded-full progress-fill"
-          style={{ width: `${progress}%` }}
-        />
+        <div className="h-full bg-ink rounded-full progress-fill" style={{ width: `${progress}%` }} />
       </div>
     </div>
   );
 }
+
+export default memo(ProgressBar);

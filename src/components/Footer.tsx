@@ -1,8 +1,9 @@
 "use client";
 
+import { memo } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 
-export default function Footer() {
+function FooterInner() {
   const { t } = useLanguage();
 
   return (
@@ -30,3 +31,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+export default memo(FooterInner);

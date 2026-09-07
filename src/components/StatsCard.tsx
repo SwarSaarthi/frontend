@@ -1,4 +1,4 @@
-"use client";
+import { memo } from "react";
 
 interface StatsCardProps {
   icon: React.ReactNode;
@@ -7,7 +7,7 @@ interface StatsCardProps {
   suffix?: string;
 }
 
-export default function StatsCard({ icon, label, value, suffix }: StatsCardProps) {
+function StatsCard({ icon, label, value, suffix }: StatsCardProps) {
   return (
     <div className="card p-5">
       <div className="w-8 h-8 rounded-full border border-line bg-mist flex items-center justify-center mb-3 text-ink-soft">
@@ -21,3 +21,5 @@ export default function StatsCard({ icon, label, value, suffix }: StatsCardProps
     </div>
   );
 }
+
+export default memo(StatsCard);

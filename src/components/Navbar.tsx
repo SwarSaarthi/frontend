@@ -1,23 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
 import Image from "next/image";
 
-export default function Navbar() {
+function NavbarInner() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t, toggleLang } = useLanguage();
   const pathname = usePathname();
 
-  const navLinks = [
-    { href: "/", label: t.navHome },
-    { href: "/practice", label: t.navPractice },
-    { href: "/profile", label: t.navProfile },
-  ];
+  // navLinks is memoised — without this, a new array on every parent re-render
+  // would cause the .map list to reconcile as all-new nodes.
+  const navLinks = useMemo(
+    () => [
+      { href: "/", label: t.navHome },
+      { href: "/practice", label: t.navPractice },
+      { href: "/profile", label: t.navProfile },
+    ],
+    [t.navHome, t.navPractice, t.navProfile],
+  );
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = useCallback((href: string) => pathname === href, [pathname]);
+  const handleToggleMenu = useCallback(() => setIsMobileMenuOpen((v) => !v), []);
+  const handleCloseMenu = useCallback(() => setIsMobileMenuOpen(false), []);
+  const handleLangToggle = useCallback(() => {
+    toggleLang();
+    setIsMobileMenuOpen(false);
+  }, [toggleLang]);
 
   return (
     <nav className="sticky top-0 z-50 bg-paper/90 backdrop-blur-[6px] border-b border-line">
@@ -25,7 +36,16 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-[60px]">
           <Link href="/" className="flex items-center gap-3">
             <span className="w-9 h-9 rounded-full overflow-hidden border border-line bg-white flex items-center justify-center">
-              <Image src="/swarSaarthi.png" alt="SwarSaarthi" height={36} width={36} className="object-contain" />
+              <Image
+                src="/swarSaarthi.png"
+                alt="SwarSaarthi"
+                height={36}
+                width={36}
+                priority
+                sizes="36px"
+                quality={85}
+                className="object-contain"
+              />
             </span>
             <div className="flex flex-col leading-none">
               <span className="text-[15px] font-bold tracking-tight text-ink">SwarSaarthi</span>
@@ -39,6 +59,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch
                 className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors duration-150 ${
                   isActive(link.href)
                     ? "bg-ink text-white"
@@ -59,7 +80,7 @@ export default function Navbar() {
           </div>
 
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={handleToggleMenu}
             className="md:hidden w-9 h-9 rounded-full border border-line bg-white flex items-center justify-center"
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
@@ -81,7 +102,7 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={handleCloseMenu}
                   className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                     isActive(link.href) ? "bg-ink text-white" : "text-ink hover:bg-white border border-line"
                   }`}
@@ -90,10 +111,7 @@ export default function Navbar() {
                 </Link>
               ))}
               <button
-                onClick={() => {
-                  toggleLang();
-                  setIsMobileMenuOpen(false);
-                }}
+                onClick={handleLangToggle}
                 className="px-4 py-2.5 rounded-xl text-sm font-medium text-ink border border-line bg-white text-left flex items-center gap-2"
               >
                 <svg className="w-4 h-4 text-ink-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
@@ -109,3 +127,5 @@ export default function Navbar() {
     </nav>
   );
 }
+
+export default memo(NavbarInner);
