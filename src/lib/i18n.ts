@@ -214,7 +214,7 @@ export const i18n = {
     transliterationLabel: "लिप्यंतरण",
 
     // Feedback
-    feedbackCorrect: "बहुत बढ़िया — आपने सही उच्चारण किया।",
+    feedbackCorrect: "बहुत बढ़िया - आपने सही उच्चारण किया।",
     feedbackTryAgain:
       "लगभग सही — ध्यान से सुनें और फिर से प्रयास करें।",
     feedbackNeutral: "माइक बटन दबाएँ और ऊपर दिखाया गया शब्द बोलें।",
@@ -240,7 +240,7 @@ export const i18n = {
     date: "तारीख",
 
     // Footer
-    footerText: "स्वरसारथी — AI संचालित वाक् सहायक प्रणाली",
+    footerText: "स्वरसारथी - AI संचालित वाक् सहायक प्रणाली",
     footerNote: "बेहतर संवाद के लिए देखभाल से बनाया गया",
     langSwitch: "English",
   },

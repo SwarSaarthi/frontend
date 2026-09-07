@@ -462,7 +462,7 @@ export default function Home() {
               <Reveal key={card.title} delay={i * 70}>
                 <TiltCard maxTilt={8}>
                   <div
-                    className={`glass-card relative h-65 overflow-hidden rounded-2xl bg-linear-to-br p-7 ${card.tint}`}
+                    className={`glass-card relative h-70 overflow-hidden rounded-2xl bg-linear-to-br p-7 ${card.tint}`}
                   >
                     <div className="absolute inset-0 flex items-center justify-center text-8xl opacity-20">
                       {card.icon}
@@ -471,7 +471,7 @@ export default function Home() {
                       <h3 className="text-2xl font-extrabold text-zinc-900">
                         {card.title}
                       </h3>
-                      <p className="mt-4 text-sm leading-6 text-zinc-700">
+                      <p className="mt-4 text-sm leading-6 text-zinc-800">
                         {card.desc}
                       </p>
                       <div
