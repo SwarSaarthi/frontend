@@ -21,14 +21,21 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { useLanguage } from "@/components/LanguageProvider";
 import WordCard from "@/components/WordCard";
-import MicRecorder from "@/components/MicRecorder";
 import FeedbackPanel from "@/components/FeedbackPanel";
 import ProgressBar from "@/components/ProgressBar";
 import { practiceWords } from "@/lib/mockData";
 import type { FeedbackState, PronunciationAttempt } from "@/types";
+
+// MicRecorder is heavy (MediaRecorder + interval) and only needed in /practice.
+// Dynamic import keeps its JS out of the home/profile bundles.
+const MicRecorder = dynamic(() => import("@/components/MicRecorder"), {
+  ssr: false,
+  loading: () => <div className="h-[104px] flex items-center justify-center text-xs text-ink-faint">Loading mic…</div>,
+});
 
 export default function PracticePage() {
   const { t } = useLanguage();
@@ -40,8 +47,11 @@ export default function PracticePage() {
     type: "neutral",
   });
 
-  const currentWord = practiceWords[currentIndex];
+  // memo so reference stable unless index changes — prevents WordCard/MicRecorder
+  // re-render cascades when only feedback changes.
+  const currentWord = useMemo(() => practiceWords[currentIndex], [currentIndex]);
   const totalWords = practiceWords.length;
+  const isSuccess = feedback.type === "success";
 
   /**
    * Handle recording completion.
@@ -130,35 +140,28 @@ export default function PracticePage() {
   }, [t, totalWords]);
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] py-6 sm:py-10 px-4 animate-fade-in">
+    <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-10 px-4 sm:px-6">
       <div className="max-w-xl mx-auto">
-        {/* Page title */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-text-primary text-center mb-6">
-          {t.practiceTitle}
-        </h1>
+        <div className="flex items-center gap-3 mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-ink">{t.practiceTitle}</h1>
+          <span className="h-px flex-1 bg-line hidden sm:block" />
+          <span className="text-xs text-ink-faint border border-line rounded-full px-2.5 py-1 bg-white">
+            {currentIndex + 1} / {totalWords}
+          </span>
+        </div>
 
-        {/* Progress bar */}
         <div className="mb-6">
           <ProgressBar current={currentIndex} total={totalWords} />
         </div>
 
-        {/* Word card — displays the Hindi word to practice */}
-        <div className="mb-8">
-          <WordCard
-            word={currentWord}
-            isCorrect={feedback.type === "success"}
-          />
+        <div className="mb-6">
+          <WordCard word={currentWord} isCorrect={isSuccess} />
         </div>
 
-        {/* Mic recorder */}
-        <div className="mb-8">
-          <MicRecorder
-            onRecordingComplete={handleRecordingComplete}
-            disabled={feedback.isVisible}
-          />
+        <div className="mb-6">
+          <MicRecorder onRecordingComplete={handleRecordingComplete} disabled={feedback.isVisible} />
         </div>
 
-        {/* Feedback panel — appears after recording */}
         <div className="mb-6">
           <FeedbackPanel
             feedback={feedback}
@@ -168,20 +171,18 @@ export default function PracticePage() {
           />
         </div>
 
-        {/* Navigation buttons */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center border-t border-line pt-4">
           <button
             onClick={handlePrevWord}
-            className="px-4 py-2 rounded-full text-sm font-medium text-text-secondary hover:text-primary hover:bg-primary-50 active:scale-95 transition-all"
+            className="px-4 py-2 rounded-full text-sm font-medium text-ink-soft border border-line bg-white hover:border-stone-strong hover:text-ink transition-colors duration-150"
           >
-            ← {t.prevWord}
+            <span aria-hidden>←</span> {t.prevWord}
           </button>
-
           <button
             onClick={handleNextWord}
-            className="px-4 py-2 rounded-full text-sm font-medium text-text-secondary hover:text-primary hover:bg-primary-50 active:scale-95 transition-all"
+            className="px-4 py-2 rounded-full text-sm font-medium text-ink-soft border border-line bg-white hover:border-stone-strong hover:text-ink transition-colors duration-150"
           >
-            {t.skipWord} →
+            {t.skipWord} <span aria-hidden>→</span>
           </button>
         </div>
       </div>

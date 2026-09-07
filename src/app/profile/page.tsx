@@ -1,143 +1,117 @@
-/**
- * SwarSaarthi — Profile Page
- *
- * User's profile and progress tracking page showing:
- *  - User info card with avatar placeholder
- *  - Overall stats (words practiced, accuracy, streak)
- *  - Difficult words section (words needing extra practice)
- *  - Recent practice sessions
- *
- * FUTURE BACKEND INTEGRATION:
- *  - Profile data: GET /api/profile
- *  - Progress data: GET /api/progress
- *  - Sessions: GET /api/sessions
- *  - Authentication: The profile will be behind auth (POST /api/auth/login)
- */
-
 "use client";
 
+import { useMemo } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import StatsCard from "@/components/StatsCard";
 import DifficultWords from "@/components/DifficultWords";
 import { mockUserProfile } from "@/lib/mockData";
 
+function DocIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} {...props}>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9Z" />
+      <path d="M14 3v6h6M9 13h6M9 17h6" strokeLinecap="round" />
+    </svg>
+  );
+}
+function TargetIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} {...props}>
+      <circle cx="12" cy="12" r="7" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2v1M12 21v1M2 12h1M21 12h1" strokeLinecap="round" />
+    </svg>
+  );
+}
+function FlameIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} {...props}>
+      <path d="M12 3s4 3.2 4 7a4 4 0 0 1-8 0c0-3.8 4-7 4-7Z" />
+      <path d="M12 17a2 2 0 0 0 2-2c0-1-1-1.8-2-3-1 1.2-2 2-2 3a2 2 0 0 0 2 2Z" />
+    </svg>
+  );
+}
+
 export default function ProfilePage() {
   const { t, lang } = useLanguage();
   const profile = mockUserProfile;
 
-  return (
-    <div className="min-h-[calc(100vh-8rem)] py-6 sm:py-10 px-4 animate-fade-in">
-      <div className="max-w-3xl mx-auto">
-        {/* Page title */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-text-primary text-center mb-8">
-          {t.profileTitle}
-        </h1>
+  // format dates once per lang — avoids new Date() + toLocaleDateString on every render
+  const sessions = useMemo(
+    () =>
+      profile.recentSessions.map((s) => ({
+        ...s,
+        label: new Date(s.date).toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", {
+          day: "numeric",
+          month: "short",
+        }),
+      })),
+    [lang, profile.recentSessions],
+  );
 
-        {/* ================================================================
-            USER INFO CARD
-            ================================================================ */}
-        <div className="card-warm p-6 mb-8 flex items-center gap-4">
-          {/* Avatar placeholder */}
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-linear-to-br from-primary-light to-primary flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shrink-0">
+  return (
+    <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-10 px-4 sm:px-6">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center gap-3 mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-ink">{t.profileTitle}</h1>
+          <span className="h-px flex-1 bg-line hidden sm:block" />
+        </div>
+
+        <div className="card p-6 mb-6 flex items-center gap-4">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-ink text-white flex items-center justify-center text-lg font-bold shrink-0">
             {profile.name.charAt(0)}
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-text-primary font-hindi">
-              {profile.name}
-            </h2>
-            <p className="text-sm text-text-secondary">
-              {/* TODO: Replace with user's join date from backend */}
-              🗓️{" "}
-              {lang === "hi"
-                ? "सितंबर 2026 से सक्रिय"
-                : "Active since September 2026"}
+            <h2 className="text-lg sm:text-xl font-bold text-ink font-hindi leading-none">{profile.name}</h2>
+            <p className="text-xs text-ink-soft mt-1.5 flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-full border border-line bg-mist flex items-center justify-center">
+                <svg className="w-3 h-3 text-ink-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                  <rect x="3" y="4" width="18" height="16" rx="2" />
+                  <path d="M3 8h18M8 3v3M16 3v3" strokeLinecap="round" />
+                </svg>
+              </span>
+              {lang === "hi" ? "सितंबर 2026 से सक्रिय" : "Active since September 2026"}
             </p>
           </div>
         </div>
 
-        {/* ================================================================
-            STATS GRID
-            ================================================================ */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
-          <StatsCard
-            icon="📝"
-            label={t.totalPracticed}
-            value={profile.totalWordsPracticed}
-            accentColor="text-primary"
-          />
-          <StatsCard
-            icon="🎯"
-            label={t.accuracy}
-            value={profile.overallAccuracy}
-            suffix="%"
-            accentColor="text-secondary"
-          />
-          <StatsCard
-            icon="🔥"
-            label={t.streak}
-            value={profile.streakDays}
-            accentColor="text-accent"
-          />
+          <StatsCard icon={<DocIcon className="w-4 h-4" />} label={t.totalPracticed} value={profile.totalWordsPracticed} />
+          <StatsCard icon={<TargetIcon className="w-4 h-4" />} label={t.accuracy} value={profile.overallAccuracy} suffix="%" />
+          <StatsCard icon={<FlameIcon className="w-4 h-4" />} label={t.streak} value={profile.streakDays} />
         </div>
 
-        {/* ================================================================
-            DIFFICULT WORDS SECTION
-            ================================================================ */}
         <section className="mb-8">
           <div className="mb-4">
-            <h2 className="text-lg sm:text-xl font-bold text-text-primary">
-              {t.difficultWordsTitle}
-            </h2>
-            <p className="text-sm text-text-secondary">
-              {t.difficultWordsDesc}
-            </p>
+            <h2 className="text-base sm:text-lg font-bold tracking-tight text-ink">{t.difficultWordsTitle}</h2>
+            <p className="text-sm text-ink-soft">{t.difficultWordsDesc}</p>
           </div>
           <DifficultWords words={profile.difficultWords} />
         </section>
 
-        {/* ================================================================
-            RECENT SESSIONS
-            ================================================================ */}
         <section>
-          <h2 className="text-lg sm:text-xl font-bold text-text-primary mb-4">
-            {t.recentActivityTitle}
-          </h2>
-
+          <h2 className="text-base sm:text-lg font-bold tracking-tight text-ink mb-4">{t.recentActivityTitle}</h2>
           <div className="space-y-3">
-            {profile.recentSessions.map((session) => (
-              <div
-                key={session.id}
-                className="card-warm p-4 flex items-center justify-between"
-              >
+            {sessions.map((session) => (
+              <div key={session.id} className="card p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {/* Date */}
-                  <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center text-xs font-semibold text-primary">
-                    {new Date(session.date).toLocaleDateString(
-                      lang === "hi" ? "hi-IN" : "en-IN",
-                      { day: "numeric", month: "short" },
-                    )}
+                  <div className="w-10 h-10 rounded-xl bg-mist border border-line flex items-center justify-center text-xs font-semibold text-ink">
+                    {session.label}
                   </div>
-
-                  {/* Session info */}
                   <div>
-                    <p className="text-sm font-medium text-text-primary">
-                      {session.wordsCorrect}/{session.wordsAttempted}{" "}
-                      {t.correct}
+                    <p className="text-sm font-medium text-ink">
+                      {session.wordsCorrect}/{session.wordsAttempted} {t.correct}
                     </p>
-                    <p className="text-xs text-text-muted">
-                      {session.durationMinutes} {t.duration}
-                    </p>
+                    <p className="text-xs text-ink-faint">{session.durationMinutes} {t.duration}</p>
                   </div>
                 </div>
-
-                {/* Accuracy badge */}
                 <div
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
                     session.accuracy >= 75
-                      ? "bg-success-light text-success"
+                      ? "bg-moss-soft text-moss border-moss/10"
                       : session.accuracy >= 50
-                        ? "bg-accent-light text-accent"
-                        : "bg-error-light text-error"
+                        ? "bg-mist text-ink border-line"
+                        : "bg-error-light text-error border-error/10"
                   }`}
                 >
                   {session.accuracy}%

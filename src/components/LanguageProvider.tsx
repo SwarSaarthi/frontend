@@ -14,7 +14,7 @@
 
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { i18n, type I18nStrings } from "@/lib/i18n";
 import type { UILanguage } from "@/types";
 
@@ -37,11 +37,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLang((prev) => (prev === "en" ? "hi" : "en"));
   }, []);
 
-  const value: LanguageContextValue = {
-    lang,
-    t: i18n[lang],
-    toggleLang,
-  };
+  // t reference is stable per lang (i18n is a const object), but we memoise the
+  // whole context value so consumers don't re-render when parent re-renders
+  // for unrelated reasons (e.g. practice word index changing below).
+  const t = i18n[lang];
+  const value = useMemo<LanguageContextValue>(
+    () => ({ lang, t, toggleLang }),
+    [lang, t, toggleLang],
+  );
 
   return (
     <LanguageContext.Provider value={value}>
