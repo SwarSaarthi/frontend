@@ -80,7 +80,7 @@ function MicRecorderInner({ onRecordingComplete, disabled = false }: MicRecorder
         <button
           onClick={handleMicClick}
           disabled={disabled || isProcessing}
-          className={`relative z-10 w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-full flex items-center justify-center transition-colors duration-150 border ${
+          className={`relative z-10 w-18 h-18 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-colors duration-150 border ${
             isRecording
               ? "bg-error text-white border-error"
               : isProcessing

@@ -34,7 +34,7 @@ import type { FeedbackState, PronunciationAttempt } from "@/types";
 // Dynamic import keeps its JS out of the home/profile bundles.
 const MicRecorder = dynamic(() => import("@/components/MicRecorder"), {
   ssr: false,
-  loading: () => <div className="h-[104px] flex items-center justify-center text-xs text-ink-faint">Loading mic…</div>,
+  loading: () => <div className="h-26 flex items-center justify-center text-xs text-ink-faint">Loading mic…</div>,
 });
 
 export default function PracticePage() {

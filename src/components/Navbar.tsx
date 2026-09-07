@@ -33,23 +33,27 @@ function NavbarInner() {
   return (
     <nav className="sticky top-0 z-50 bg-paper/90 backdrop-blur-[6px] border-b border-line">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-[60px]">
+        <div className="flex items-center justify-between h-15">
           <Link href="/" className="flex items-center gap-3">
-            <span className="w-9 h-9 rounded-full overflow-hidden border border-line bg-white flex items-center justify-center">
+            <span className="w-14 h-14 overflow-hidden flex items-center justify-center">
               <Image
                 src="/swarSaarthi.png"
                 alt="SwarSaarthi"
-                height={36}
-                width={36}
+                height={60}
+                width={60}
                 priority
-                sizes="36px"
+                sizes="60px"
                 quality={85}
-                className="object-contain"
               />
             </span>
             <div className="flex flex-col leading-none">
-              <span className="text-[15px] font-bold tracking-tight text-ink">SwarSaarthi</span>
-              <span className="text-[11px] font-hindi text-ink-soft -mt-0.5 tracking-wide">स्वर सारथी</span>
+              <span className="text-[16px] font-bold tracking-tight text-ink">
+                <span className="text-blue-900">Swar</span>
+                <span className="text-orange-500">Saarthi</span>
+              </span>
+              <span className="text-[13px] font-hindi text-ink-soft mt-0.5 tracking-wide">
+                <span className="text-blue-900">स्वर</span> <span className="text-orange-500">सारथी</span>
+              </span>
             </div>
           </Link>
 
@@ -85,7 +89,13 @@ function NavbarInner() {
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
           >
-            <svg className="w-4 h-4 text-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.6}>
+            <svg
+              className="w-4 h-4 text-ink"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={1.6}
+            >
               {isMobileMenuOpen ? (
                 <path strokeLinecap="round" d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -104,7 +114,9 @@ function NavbarInner() {
                   href={link.href}
                   onClick={handleCloseMenu}
                   className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                    isActive(link.href) ? "bg-ink text-white" : "text-ink hover:bg-white border border-line"
+                    isActive(link.href)
+                      ? "bg-ink text-white"
+                      : "text-ink hover:bg-white border border-line"
                   }`}
                 >
                   {link.label}
@@ -114,7 +126,13 @@ function NavbarInner() {
                 onClick={handleLangToggle}
                 className="px-4 py-2.5 rounded-xl text-sm font-medium text-ink border border-line bg-white text-left flex items-center gap-2"
               >
-                <svg className="w-4 h-4 text-ink-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                <svg
+                  className="w-4 h-4 text-ink-soft"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
                   <circle cx="12" cy="12" r="9" />
                   <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
                 </svg>

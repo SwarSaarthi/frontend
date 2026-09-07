@@ -122,7 +122,7 @@ export const i18n = {
     date: "Date",
 
     // Footer
-    footerText: "SwarSaarthi — An AI-Powered Speech Assistive System",
+    footerText: "SwarSaarthi, An AI-Powered Speech Assistive System",
     footerNote: "Made with care for better communication",
     langSwitch: "हिन्दी",
   },

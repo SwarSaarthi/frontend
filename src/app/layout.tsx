@@ -2,15 +2,18 @@
  * SwarSaarthi — Root Layout
  *
  * Sets up:
- *  - Google Fonts: Poppins (UI) + Noto Sans Devanagari (Hindi text)
+ *  - Google Fonts:Plus Jakarta Sans (UI) + Noto Sans Devanagari (Hindi text)
+ *  - Local Quicksand variable font for the main brand look
  *  - LanguageProvider for bilingual support
  *  - Navbar + Footer shared across all pages
  *  - SEO metadata
  */
 
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import localFont from "next/font/local";
-import { Noto_Sans_Devanagari } from "next/font/google";
+import { Noto_Sans_Devanagari, Plus_Jakarta_Sans } from "next/font/google";
+import CursorFollower from "@/components/CursorFollower";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -29,12 +32,7 @@ const quicksand = localFont({
     },
   ],
   variable: "--font-quicksand",
-import { Plus_Jakarta_Sans, Noto_Sans_Devanagari } from "next/font/google";
-import { LanguageProvider } from "@/components/LanguageProvider";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import CursorFollower from "@/components/CursorFollower";
-import "./globals.css";
+});
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -70,12 +68,13 @@ export const metadata: Metadata = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   return (
     <html
       lang="en"
-      className={`${quicksand.variable} ${notoDevanagari.variable} h-full antialiased`}
-      className={`${plusJakarta.variable} ${notoDevanagari.variable} h-full antialiased`}
+      className={`${quicksand.variable} ${plusJakarta.variable} ${notoDevanagari.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
         <LanguageProvider>
@@ -90,5 +89,3 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     </html>
   );
 }
-
-

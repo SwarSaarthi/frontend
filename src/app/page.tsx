@@ -1,17 +1,7 @@
-/**
- * SwarSaarthi — Home Page
- *
- * A warm, human-centric, ultra-attractive landing page featuring:
- *  - Distinct vibrant color theme for EVERY section with smooth background transitions
- *  - Sleek modern cards (rounded-xl, backdrop-blur translucent glass)
- *  - Prominent centered Real-Color watermark icon background overlays (opacity 25%-45%)
- *  - All text color styled as text-zinc-900 for high-contrast crisp readability
- *  - Fully reactive bilingual support via useLanguage(): when toggled, cards show ONLY the active language
- */
+﻿"use client";
 
-"use client";
-
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
 import TiltCard from "@/components/TiltCard";
@@ -19,637 +9,695 @@ import HomeWordTeaser from "@/components/HomeWordTeaser";
 
 function SoundWaveIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} {...props}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      {...props}
+    >
       <path d="M3 10v4M7 8v8M11 6v12M15 9v6M19 11v2" strokeLinecap="round" />
     </svg>
   );
 }
+
 function EarIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} {...props}>
-      <path d="M6 12c0-3.3 2.7-6 6-6s6 2.7 6 6c0 2.2-1 4-2.5 5.2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      {...props}
+    >
+      <path
+        d="M6 12c0-3.3 2.7-6 6-6s6 2.7 6 6c0 2.2-1 4-2.5 5.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
       <path d="M9 16c1.2 1.2 4.8 1.2 6 0" strokeLinecap="round" />
     </svg>
   );
 }
+
 function MicIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} {...props}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      {...props}
+    >
       <rect x="9" y="3" width="6" height="11" rx="3" />
       <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" strokeLinecap="round" />
     </svg>
   );
 }
-function TrendIcon(props: React.SVGProps<SVGSVGElement>) {
+
+function ProgressIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} {...props}>
-      <path d="M4 16l6-6 4 4 6-7" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      {...props}
+    >
+      <path
+        d="M4 16l6-6 4 4 6-7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       <path d="M14 7h6v6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
+function TrendIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      {...props}
+    >
+      <path
+        d="M4 16l6-6 4 4 6-7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M14 7h6v6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function Reveal({
+  children,
+  className = "",
+  delay = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setShown(true);
+      },
+      { threshold: 0.14, rootMargin: "0px 0px -48px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: shown ? 1 : 0,
+        transform: shown ? "none" : "translateY(16px)",
+        transition: `opacity 0.5s ease ${delay}ms, transform 0.5s ease ${delay}ms`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SparklineMark({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 88 44" className={className} aria-hidden>
+      <polyline
+        className="sparkline-path"
+        points="4,36 14,30 22,32 34,20 42,24 54,12 64,16 76,6 84,10"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        className="sparkline-tip"
+        cx="84"
+        cy="10"
+        r="3.4"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function ColorBridge({ from, to }: { from: string; to: string }) {
+  return (
+    <div
+      className="home-blend"
+      style={{ background: `linear-gradient(180deg, ${from} 0%, ${to} 100%)` }}
+      aria-hidden
+    />
+  );
+}
+
+function WaveBars() {
+  return (
+    <div className="flex h-10 items-end justify-center gap-1">
+      {[8, 16, 22, 12, 20, 10, 18, 14].map((h, i) => (
+        <span
+          key={i}
+          className="bar-wave w-1 rounded-full bg-[#c45c3e]"
+          style={{ height: h, animationDelay: `${i * 90}ms` }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function Home() {
   const { t } = useLanguage();
+  const [activeStep, setActiveStep] = useState(0);
+  const rotatingWords = useMemo(
+    () => [
+      { hi: "नमस्ते", en: "Namaste - Hello" },
+      { hi: "शुक्रिया", en: "Shukriya - Thank you" },
+      { hi: "कृपया", en: "Kripya - Please" },
+      { hi: "अभिनंदन", en: "Abhinandan - Congratulations" },
+    ],
+    [],
+  );
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setWordIndex((i) => (i + 1) % rotatingWords.length);
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [rotatingWords.length]);
 
   const steps = useMemo(
     () => [
-      { n: "01", icon: EarIcon, title: t.step1Title, desc: t.step1Desc },
-      { n: "02", icon: MicIcon, title: t.step2Title, desc: t.step2Desc },
-      { n: "03", icon: TrendIcon, title: t.step3Title, desc: t.step3Desc },
+      {
+        n: "01",
+        icon: EarIcon,
+        title: t.step1Title,
+        desc: t.step1Desc,
+        tint: "from-[#f6d7c8]/70 to-white/30",
+        accent: "#c45c3e",
+      },
+      {
+        n: "02",
+        icon: MicIcon,
+        title: t.step2Title,
+        desc: t.step2Desc,
+        tint: "from-[#d7e6dc]/80 to-white/30",
+        accent: "#3f6f5c",
+      },
+      {
+        n: "03",
+        icon: TrendIcon,
+        title: t.step3Title,
+        desc: t.step3Desc,
+        tint: "from-[#ead9a8]/70 to-white/30",
+        accent: "#b8862a",
+      },
     ],
-    [t.step1Title, t.step1Desc, t.step2Title, t.step2Desc, t.step3Title, t.step3Desc],
+    [
+      t.step1Title,
+      t.step1Desc,
+      t.step2Title,
+      t.step2Desc,
+      t.step3Title,
+      t.step3Desc,
+    ],
   );
 
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setActiveStep((n) => (n + 1) % 3);
+    }, 2400);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const empathyCards = [
+    {
+      title: t.empathyCard1Title,
+      desc: t.empathyCard1Desc,
+      tag: t.empathyCard1Tag,
+      icon: "💖",
+      tint: "from-[#f3cfc6]/65 to-white/25",
+      tagColor: "text-[#a24b38]",
+    },
+    {
+      title: t.empathyCard2Title,
+      desc: t.empathyCard2Desc,
+      tag: t.empathyCard2Tag,
+      icon: "🎧",
+      tint: "from-[#d5e4ef]/75 to-white/25",
+      tagColor: "text-[#3d5f78]",
+    },
+    {
+      title: t.empathyCard3Title,
+      desc: t.empathyCard3Desc,
+      tag: t.empathyCard3Tag,
+      icon: "🌱",
+      tint: "from-[#d8e6d6]/75 to-white/25",
+      tagColor: "text-[#3f6a4a]",
+    },
+  ];
+
+  const featureCards = [
+    {
+      title: t.feature1Title,
+      desc: t.feature1Desc,
+      icon: "📚",
+      tint: "from-[#f0d4c4]/70 to-white/20",
+    },
+    {
+      title: t.feature2Title,
+      desc: t.feature2Desc,
+      icon: "🎙️",
+      tint: "from-[#d6e4da]/75 to-white/20",
+    },
+    {
+      title: t.feature3Title,
+      desc: t.feature3Desc,
+      icon: "🎯",
+      tint: "from-[#ead7a6]/70 to-white/20",
+    },
+    {
+      title: t.feature4Title,
+      desc: t.feature4Desc,
+      icon: "🌐",
+      tint: "from-[#d3e0ee]/75 to-white/20",
+    },
+    {
+      title: t.feature5Title,
+      desc: t.feature5Desc,
+      icon: "📊",
+      tint: "from-[#e4d5c2]/70 to-white/20",
+    },
+    {
+      title: t.feature6Title,
+      desc: t.feature6Desc,
+      icon: "🛡️",
+      tint: "from-[#d9d3e6]/70 to-white/20",
+    },
+  ];
+
   return (
-    <div>
-      {/* HERO — editorial, left-aligned, paper bg */}
-      <section className="px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto py-10 sm:py-16 lg:py-20">
-          <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-10 lg:gap-12 items-start">
-            {/* Left: copy */}
-            <div>
-              {/* eyebrow */}
-              <div className="flex items-center gap-3 mb-6">
-                <span className="h-px w-8 bg-stone-strong" />
-                <span className="inline-flex items-center gap-2 text-[11px] tracking-[0.14em] font-semibold uppercase text-ink-soft">
-                  <SoundWaveIcon className="w-3.5 h-3.5 text-clay" />
+    <main className="relative overflow-hidden text-zinc-900">
+      <section className="relative isolate overflow- bg-[#fff7f1] px-4 py-20 sm:px-6 lg:px-8">
+        <Image
+          src="/landingpageimage.png"
+          alt=""
+          fill
+          priority
+          quality={80}
+          sizes="100vw"
+          className="object-cover object-[78%_center] sm:object-center opacity-68"
+        />
+        <div
+          className="pointer-events-none absolute inset-0 bg-linear-to-r from-[#fff7f1]/60 via-[#fff7f1]/35 to-[#fff7f1]/8"
+          aria-hidden
+        />
+        <div className="relative z-10 mx-auto max-w-6xl">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+            <Reveal>
+              <div className="mb-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-600">
+                <span className="h-px w-8 bg-zinc-400" />
+                <span className="inline-flex items-center gap-2">
+                  <SoundWaveIcon className="h-3.5 w-3.5 text-[#c45c3e]" />
                   {t.tagline}
                 </span>
               </div>
 
-              <h1 className="text-[32px] sm:text-[44px] lg:text-[52px] font-bold text-ink leading-[0.95] mb-4">
+              <h1 className="text-4xl font-black leading-none tracking-tight text-zinc-900 sm:text-5xl lg:text-6xl">
                 {t.heroTitle}
-                <span className="block text-clay mt-1 font-medium text-[22px] sm:text-[26px] tracking-tight font-hindi">
+                <span className="mt-2 block text-[1.3rem] font-medium text-[#b85034] sm:text-[2rem]">
                   आइए, साथ मिलकर बोलना सीखें
                 </span>
               </h1>
 
-              <p className="text-[15px] sm:text-[16px] leading-7 text-ink-soft max-w-[52ch] mt-5">
+              <p className="mt-6 max-w-xl text-base leading-7 text-zinc-700 sm:text-lg">
                 {t.heroSubtitle}
               </p>
 
-              <div className="flex flex-wrap gap-3 mt-8">
+              <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/practice"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-clay text-white text-sm font-semibold rounded-full hover:bg-clay-hover transition-colors duration-150"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#c45c3e] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#c45c3e]/20 transition hover:bg-[#a94c32]"
                 >
-                  <MicIcon className="w-4 h-4" />
+                  <MicIcon className="h-4 w-4" />
                   {t.ctaPractice}
                 </Link>
+
                 <Link
                   href="/profile"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-line text-ink text-sm font-medium rounded-full hover:bg-mist hover:border-stone-strong transition-colors duration-150"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/70 bg-white/50 px-6 py-3 text-sm font-semibold text-zinc-800 backdrop-blur-md transition hover:bg-white/80"
                 >
-                  <span className="w-4 h-4 rounded-full border border-ink-faint flex items-center justify-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-ink-faint" />
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full border border-zinc-400 text-[8px]">
+                    i
                   </span>
                   {t.ctaProfile}
                 </Link>
               </div>
 
-              <p className="mt-8 text-xs text-ink-faint flex items-start gap-2 max-w-[52ch]">
-                <span className="mt-0.5 w-3 h-3 rounded-full border border-stone-strong flex items-center justify-center shrink-0 text-[8px] leading-none">i</span>
+              <p className="mt-8 flex max-w-xl items-start gap-2 text-xs text-zinc-600">
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-zinc-400 text-[9px] text-zinc-600">
+                  i
+                </span>
                 <span>{t.disclaimer}</span>
               </p>
-            </div>
+            </Reveal>
 
-            {/* Right: notebook card — no image, just type */}
-            <div className="lg:pt-2">
-              <div className="card p-6 sm:p-7">
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-[11px] tracking-[0.12em] uppercase font-semibold text-ink-faint">
+            <Reveal delay={90}>
+              <div className="glass-card rounded-3xl p-6">
+                <div className="mb-6 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
                     Today&apos;s word
                   </span>
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-mist border border-line text-ink-soft">1 / 15</span>
+                  <span className="rounded-full border border-white/70 bg-white/50 px-2.5 py-1 text-xs text-zinc-600">
+                    1 / 15
+                  </span>
                 </div>
 
-                <div className="text-center py-4">
-                  <p className="font-hindi text-[52px] sm:text-[56px] font-bold text-ink leading-none">नमस्ते</p>
-                  <p className="text-sm text-ink-soft italic mt-2">Namaste — Hello / Greetings</p>
-                  <div className="flex justify-center gap-1.5 mt-4">
-                    <span className="w-1.5 h-1.5 rounded-full bg-clay" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-stone" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-stone" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-stone" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-stone" />
+                <div className="rounded-2xl bg-[#f6d9cc]/70 p-6 text-center backdrop-blur-sm">
+                  <p className="text-5xl font-black text-zinc-900 sm:text-6xl">
+                    {rotatingWords[wordIndex].hi}
+                  </p>
+                  <p className="mt-2 text-sm italic text-zinc-600">
+                    {rotatingWords[wordIndex].en}
+                  </p>
+                  <div className="mt-4 flex justify-center gap-2">
+                    {[1, 2, 3, 4, 5].map((dot) => (
+                      <span
+                        key={dot}
+                        className="h-2 w-2 rounded-full bg-[#c45c3e] opacity-50"
+                      />
+                    ))}
                   </div>
                 </div>
 
-                <div className="rule my-6" />
+                <div className="my-6 h-px w-full bg-white/70" />
 
-                <div className="flex items-center gap-3 text-xs text-ink-soft">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="w-7 h-7 rounded-full bg-clay-soft border border-line flex items-center justify-center">
-                      <SoundWaveIcon className="w-3.5 h-3.5 text-clay" />
+                <div className="flex items-center gap-3 text-xs text-zinc-600">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f3cfc4]">
+                      <SoundWaveIcon className="h-3.5 w-3.5 text-[#c45c3e]" />
                     </span>
                     Listen
                   </span>
-                  <span className="h-3 w-px bg-line" />
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="w-7 h-7 rounded-full bg-moss-soft border border-line flex items-center justify-center">
-                      <MicIcon className="w-3.5 h-3.5 text-moss" />
+                  <span className="h-4 w-px bg-zinc-300" />
+                  <span className="inline-flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#d7e8de]">
+                      <MicIcon className="h-3.5 w-3.5 text-[#3f6f5c]" />
                     </span>
                     Speak
                   </span>
-                  <span className="ml-auto text-ink-faint">Tap mic to try</span>
+                  <span className="h-4 w-px bg-zinc-300" />
+                  <span className="inline-flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#d7e8de]">
+                      <ProgressIcon className="h-3.5 w-3.5 text-[#3f6f5c]" />
+                    </span>
+                    Improve
+                  </span>
                 </div>
               </div>
-
-              <p className="text-xs text-ink-faint mt-3 text-center">
-                Preview — practice room uses the same card. No gradients, no gloss.
-              </p>
-            </div>
-  return (
-    <div className="relative overflow-hidden font-sans">
-      {/* ================================================================
-          1. HERO SECTION — Warm Terracotta & Sunset Glow Theme
-          ================================================================ */}
-      <section className="relative py-20 sm:py-28 px-4 bg-linear-to-b from-[#FFF5ED] via-[#FFE8D6] to-[#FFF0E5] transition-colors duration-700">
-        {/* Background decorative ambient glow */}
-        <div className="pointer-events-none absolute top-10 left-1/2 -translate-x-1/2 w-250 h-75 bg-primary/10 rounded-full blur-3xl blob-shape z-0" />
-
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          {/* Main Title */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-zinc-900 mb-4 leading-tight tracking-tight animate-slide-up">
-            {t.heroTitle}
-          </h1>
-
-          {/* Hindi subtitle with hand-drawn underline accent */}
-          <div className="mb-8 animate-slide-up">
-            <span className="text-3xl sm:text-5xl font-hindi text-primary font-bold underline-hand-drawn px-3 py-1">
-              आइए, साथ मिलकर बोलना सीखें
-            </span>
-          </div>
-
-          {/* Description */}
-          <p className="text-base sm:text-xl text-zinc-800 max-w-2xl mx-auto mb-10 leading-relaxed animate-slide-up font-medium">
-            {t.heroSubtitle}
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-up mb-10">
-            <Link
-              href="/practice"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-primary text-white font-extrabold text-base sm:text-lg shadow-xl shadow-primary/25 hover:bg-primary-dark hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all duration-300 group"
-            >
-              <span className="text-xl group-hover:scale-125 transition-transform duration-200">🎙️</span>
-              <span>{t.ctaPractice}</span>
-              <svg className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </Link>
-
-            <Link
-              href="/profile"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-white/90 backdrop-blur-md text-primary font-extrabold text-base sm:text-lg border-2 border-primary-200 hover:border-primary hover:bg-primary-50/60 shadow-md active:scale-95 transition-all duration-300 group"
-            >
-              <span className="text-xl group-hover:rotate-12 transition-transform duration-200">📊</span>
-              <span>{t.ctaProfile}</span>
-            </Link>
-          </div>
-
-          {/* Assistive Tool Notice */}
-          <div className="inline-block px-5 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-primary-200/60 text-xs font-semibold text-zinc-900 shadow-xs">
-            ⓘ {t.disclaimer}
+            </Reveal>
           </div>
         </div>
       </section>
 
-      {/* ================================================================
-          2. LIVE INTERACTIVE DEMO SECTION — Fresh Forest Sage Theme
-          ================================================================ */}
-      <section className="py-16 sm:py-24 px-4 bg-linear-to-b from-[#FFF0E5] via-[#E2F0EA] to-[#D9EDE3] transition-colors duration-700 border-t border-secondary/20">
-        <HomeWordTeaser />
+      <ColorBridge from="#fff7f1" to="#f6e4d6" />
+
+      <section className="bg-[#f6e4d6] px-4 py-16 sm:px-6 lg:px-8">
+        <Reveal>
+          <HomeWordTeaser />
+        </Reveal>
       </section>
 
-      {/* ================================================================
-          3. WHY SWARSAARTHI? (HUMAN EMPATHY) — Warm Honey & Golden Amber Theme
-          ================================================================ */}
-      <section className="py-20 sm:py-28 px-4 bg-linear-to-b from-[#D9EDE3] via-[#FFF2D4] to-[#FFEBC2] transition-colors duration-700 border-t border-accent/20">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="text-xs font-extrabold px-4 py-1.5 rounded-full bg-amber-200/80 text-amber-950 uppercase tracking-wider mb-3 inline-block shadow-xs border border-amber-300/60">
-              {t.empathyBadge}
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-zinc-900">
+      <ColorBridge from="#f6e4d6" to="#f3e4e0" />
+
+      <section className="bg-[#f3e4e0] px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="mb-10 text-center">
+            <h2 className="mt-5 text-3xl font-black text-zinc-900 sm:text-5xl">
               {t.empathyTitle}
             </h2>
-            <p className="text-base text-zinc-800 mt-3 font-medium">
+            <p className="mx-auto mt-4 max-w-2xl text-base text-zinc-700">
               {t.empathySubtitle}
             </p>
-          </div>
+          </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Card 1 */}
-            <TiltCard maxTilt={8}>
-              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-8 h-full flex flex-col justify-between border border-white/80 shadow-lg hover:bg-white/70 transition-all group">
-                {/* Centered Real-Color Watermark Logo */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    💖
-                  </span>
-                </div>
-
-                <div className="relative z-10 pt-2">
-                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
-                    {t.empathyCard1Title}
-                  </h3>
-                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.empathyCard1Desc}
-                  </p>
-                </div>
-                <div className="relative z-10 mt-8 pt-4 border-t border-primary-200/60 text-xs font-bold text-primary">
-                  {t.empathyCard1Tag}
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Card 2 */}
-            <TiltCard maxTilt={8}>
-              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-8 h-full flex flex-col justify-between border border-white/80 shadow-lg hover:bg-white/70 transition-all group">
-                {/* Centered Real-Color Watermark Logo */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    🎧
-                  </span>
-                </div>
-
-                <div className="relative z-10 pt-2">
-                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
-                    {t.empathyCard2Title}
-                  </h3>
-                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.empathyCard2Desc}
-                  </p>
-                </div>
-                <div className="relative z-10 mt-8 pt-4 border-t border-secondary/30 text-xs font-bold text-secondary-dark">
-                  {t.empathyCard2Tag}
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Card 3 */}
-            <TiltCard maxTilt={8}>
-              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-8 h-full flex flex-col justify-between border border-white/80 shadow-lg hover:bg-white/70 transition-all group">
-                {/* Centered Real-Color Watermark Logo */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    🌱
-                  </span>
-                </div>
-
-                <div className="relative z-10 pt-2">
-                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
-                    {t.empathyCard3Title}
-                  </h3>
-                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.empathyCard3Desc}
-                  </p>
-                </div>
-                <div className="relative z-10 mt-8 pt-4 border-t border-amber-300/60 text-xs font-bold text-amber-900">
-                  {t.empathyCard3Tag}
-                </div>
-              </div>
-            </TiltCard>
-          </div>
-        </div>
-      </section>
-
-      {/* ================================================================
-          4. HOW IT WORKS SECTION — Earthy Rose & Terracotta Clay Theme
-          ================================================================ */}
-      <section className="py-20 sm:py-28 px-4 bg-linear-to-b from-[#FFEBC2] via-[#F8E2DC] to-[#F2D5CB] transition-colors duration-700 border-t border-primary-100">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs font-extrabold px-4 py-1.5 rounded-full bg-primary-100 text-primary-dark uppercase tracking-wider mb-3 inline-block shadow-xs border border-primary-200/60">
-              {t.howItWorksBadge}
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-zinc-900">
-              {t.howItWorksTitle}
-            </h2>
-            <p className="text-base text-zinc-800 mt-3 font-medium">
-              {t.howItWorksSubtitle}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Step 1: Listen */}
-            <TiltCard maxTilt={8}>
-              <div className="relative overflow-hidden bg-white/55 backdrop-blur-md rounded-xl p-8 border border-white/80 shadow-lg hover:bg-white/75 transition-all group h-full flex flex-col justify-between">
-                {/* Centered Real-Color Watermark Logo */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    👂
-                  </span>
-                </div>
-
-                <div className="relative z-10 flex items-center justify-between mb-6">
-                  <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-extrabold shadow-md">
-                    1
+          <div className="grid gap-6 md:grid-cols-3">
+            {empathyCards.map((card, i) => (
+              <Reveal key={card.title} delay={i * 70}>
+                <TiltCard maxTilt={8}>
+                  <div
+                    className={`glass-card relative h-65 overflow-hidden rounded-2xl bg-linear-to-br p-7 ${card.tint}`}
+                  >
+                    <div className="absolute inset-0 flex items-center justify-center text-8xl opacity-20">
+                      {card.icon}
+                    </div>
+                    <div className="relative z-10">
+                      <h3 className="text-2xl font-extrabold text-zinc-900">
+                        {card.title}
+                      </h3>
+                      <p className="mt-4 text-sm leading-6 text-zinc-700">
+                        {card.desc}
+                      </p>
+                      <div
+                        className={`mt-6 border-t border-white/60 pt-4 text-xs font-bold uppercase tracking-[0.08em] ${card.tagColor}`}
+                      >
+                        {card.tag}
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-primary-50 text-primary uppercase tracking-wider">
-                    {t.step1Label}
-                  </span>
-                </div>
-
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
-                    {t.step1Title}
-                  </h3>
-                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.step1Desc}
-                  </p>
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Step 2: Speak */}
-            <TiltCard maxTilt={8}>
-              <div className="relative overflow-hidden bg-white/55 backdrop-blur-md rounded-xl p-8 border border-white/80 shadow-lg hover:bg-white/75 transition-all group h-full flex flex-col justify-between">
-                {/* Centered Real-Color Mic Watermark Logo */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    🎙️
-                  </span>
-                </div>
-
-                <div className="relative z-10 flex items-center justify-between mb-6">
-                  <div className="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center text-lg font-extrabold shadow-md">
-                    2
-                  </div>
-                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-secondary/20 text-secondary-dark uppercase tracking-wider">
-                    {t.step2Label}
-                  </span>
-                </div>
-
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
-                    {t.step2Title}
-                  </h3>
-                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.step2Desc}
-                  </p>
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Step 3: Improve */}
-            <TiltCard maxTilt={8}>
-              <div className="relative overflow-hidden bg-white/55 backdrop-blur-md rounded-xl p-8 border border-white/80 shadow-lg hover:bg-white/75 transition-all group h-full flex flex-col justify-between">
-                {/* Centered Real-Color Watermark Logo */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-9xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    📈
-                  </span>
-                </div>
-
-                <div className="relative z-10 flex items-center justify-between mb-6">
-                  <div className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-lg font-extrabold shadow-md">
-                    3
-                  </div>
-                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-amber-100 text-amber-900 uppercase tracking-wider">
-                    {t.step3Label}
-                  </span>
-                </div>
-
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-extrabold text-zinc-900 mb-3">
-                    {t.step3Title}
-                  </h3>
-                  <p className="text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.step3Desc}
-                  </p>
-                </div>
-              </div>
-            </TiltCard>
-          </div>
-        </div>
-      </section>
-
-      {/* ================================================================
-          5. FEATURES SHOWCASE GRID — Rich Warm Stone Theme (FULLY REACTIVE BILINGUAL)
-          ================================================================ */}
-      <section className="py-20 sm:py-28 px-4 bg-linear-to-b from-[#F2D5CB] via-[#EFEAE2] to-[#E8E1D5] transition-colors duration-700 border-t border-[#DCD3C7]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs font-extrabold px-4 py-1.5 rounded-full bg-[#DFD6C9] text-zinc-900 uppercase tracking-wider mb-3 inline-block shadow-xs border border-[#D5CBC0]">
-              {t.featuresBadge}
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-zinc-900">
-              {t.featuresTitle}
-            </h2>
-            <p className="text-base text-zinc-800 mt-3 font-medium">
-              {t.featuresSubtitle}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Feature 1 */}
-            <TiltCard maxTilt={6}>
-              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    📚
-                  </span>
-                </div>
-                <div className="relative z-10 pt-2">
-                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
-                    {t.feature1Title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.feature1Desc}
-                  </p>
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Feature 2 */}
-            <TiltCard maxTilt={6}>
-              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    🎙️
-                  </span>
-                </div>
-                <div className="relative z-10 pt-2">
-                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
-                    {t.feature2Title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.feature2Desc}
-                  </p>
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Feature 3 */}
-            <TiltCard maxTilt={6}>
-              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    🎯
-                  </span>
-                </div>
-                <div className="relative z-10 pt-2">
-                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
-                    {t.feature3Title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.feature3Desc}
-                  </p>
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Feature 4 */}
-            <TiltCard maxTilt={6}>
-              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    🌐
-                  </span>
-                </div>
-                <div className="relative z-10 pt-2">
-                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
-                    {t.feature4Title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.feature4Desc}
-                  </p>
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Feature 5 */}
-            <TiltCard maxTilt={6}>
-              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    📊
-                  </span>
-                </div>
-                <div className="relative z-10 pt-2">
-                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
-                    {t.feature5Title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.feature5Desc}
-                  </p>
-                </div>
-              </div>
-            </TiltCard>
-
-            {/* Feature 6 */}
-            <TiltCard maxTilt={6}>
-              <div className="relative overflow-hidden bg-white/50 backdrop-blur-md rounded-xl p-7 h-full flex flex-col border border-white/80 shadow-md hover:bg-white/70 transition-all group">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-8xl font-black select-none opacity-25 group-hover:scale-125 group-hover:opacity-45 transition-all duration-500">
-                    🛡️
-                  </span>
-                </div>
-                <div className="relative z-10 pt-2">
-                  <h3 className="text-xl font-extrabold text-zinc-900 mb-2">
-                    {t.feature6Title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-zinc-900 font-medium leading-relaxed">
-                    {t.feature6Desc}
-                  </p>
-                </div>
-              </div>
-            </TiltCard>
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS — three columns with thin rules */}
-      <section className="px-4 sm:px-6 border-t border-line bg-white">
-        <div className="max-w-6xl mx-auto py-12 sm:py-16">
-          <div className="flex items-baseline justify-between gap-4 mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-ink">{t.howItWorksTitle}</h2>
-            <span className="hidden sm:block h-px flex-1 bg-line ml-6" />
-            <span className="text-xs text-ink-faint shrink-0">3 steps · 2 minutes</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border border-line rounded-2xl overflow-hidden">
-            {steps.map((s, i) => (
-              <div
-                key={s.n}
-                className={`p-6 sm:p-7 bg-white ${i !== 2 ? "sm:border-r border-b sm:border-b-0 border-line" : ""}`}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="w-8 h-8 rounded-full border border-line flex items-center justify-center bg-mist">
-                    <s.icon className="w-4 h-4 text-ink-soft" />
-                  </span>
-                  <span className="text-xs font-semibold tracking-widest text-ink-faint">{s.n}</span>
-                </div>
-                <h3 className="text-base font-semibold text-ink mb-2">{s.title}</h3>
-                <p className="text-sm leading-6 text-ink-soft">{s.desc}</p>
-              </div>
+                </TiltCard>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* QUOTE — simple, no emoji */}
-      <section className="px-4 sm:px-6 bg-mist border-y border-line">
-        <div className="max-w-3xl mx-auto py-10 sm:py-12 text-center">
-          <div className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-stone-strong bg-white mb-4">
-            <span className="text-clay font-serif text-lg leading-none">“</span>
-          </div>
-          <blockquote className="font-hindi text-xl sm:text-2xl font-semibold text-ink leading-relaxed">
-            हर शब्द एक कदम है, हर कदम एक उपलब्धि है
-          </blockquote>
-          <p className="text-sm text-ink-soft mt-2">Every word is a step, every step is an achievement</p>
-          <div className="w-10 h-px bg-stone-strong mx-auto mt-6" />
-      {/* ================================================================
-          6. STUDENT ENGINEERING PROJECT STORY — Sunset Peach Theme
-          ================================================================ */}
-      <section className="py-16 sm:py-24 px-4 bg-linear-to-b from-[#E8E1D5] via-[#FFE5D9] to-[#FFD8C7] transition-colors duration-700 border-t border-[#F0CEBE]">
-        <div className="max-w-4xl mx-auto">
-          <TiltCard maxTilt={4}>
-            <div className="p-8 sm:p-12 rounded-xl bg-white/60 backdrop-blur-md border border-white/90 shadow-xl relative overflow-hidden group">
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                <span className="text-9xl font-black select-none opacity-20 group-hover:scale-125 group-hover:opacity-35 transition-all duration-500">
-                  🎓
-                </span>
+      <ColorBridge from="#f3e4e0" to="#e4eee8" />
+
+      <section className="bg-[#e4eee8] px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="mb-10 text-center">
+            <h2 className="mt-5 text-3xl font-black text-zinc-900 sm:text-5xl">
+              {t.howItWorksTitle}
+            </h2>
+            <p className="mt-4 text-base text-zinc-700">
+              {t.howItWorksSubtitle}
+            </p>
+          </Reveal>
+
+          <Reveal>
+            <div className="glass-card mb-10 overflow-hidden rounded-2xl p-5 sm:p-6">
+              <div className="flex flex-col items-center gap-5 sm:flex-row sm:justify-between">
+                {steps.map((step, index) => {
+                  const Icon = step.icon;
+                  const on = activeStep === index;
+                  return (
+                    <div key={step.n} className="flex flex-1 items-center">
+                      <div className="flex w-full flex-col items-center text-center">
+                        <div
+                          className="flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-500"
+                          style={{
+                            background: on
+                              ? step.accent
+                              : "rgba(255,255,255,0.55)",
+                            color: on ? "#fff" : step.accent,
+                            borderColor: on
+                              ? step.accent
+                              : "rgba(255,255,255,0.7)",
+                            transform: on ? "scale(1.06)" : "scale(1)",
+                          }}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <p className="mt-3 text-sm font-bold text-zinc-800">
+                          {step.title}
+                        </p>
+                        <p className="text-[11px] uppercase tracking-[0.12em] text-zinc-500">
+                          {step.n}
+                        </p>
+                      </div>
+                      {index < steps.length - 1 && (
+                        <div className="relative mx-2 hidden h-px flex-1 overflow-hidden bg-[#b7c9bd] sm:block">
+                          <span className="hiw-runner absolute top-1/2 h-1.5 w-8 -translate-y-1/2 rounded-full bg-[#3f6f5c]" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                <div className="w-16 h-16 rounded-xl bg-primary text-white flex items-center justify-center text-3xl shrink-0 shadow-lg rotate-3 group-hover:rotate-6 transition-transform">
-                  🎓
-                </div>
-                <div className="text-center md:text-left">
-                  <div className="inline-block px-3.5 py-1 rounded-md bg-primary-100 text-primary-dark text-xs font-extrabold mb-3">
-                    {t.projectBadge}
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 mb-3">
-                    {t.projectTitle}
-                  </h3>
-                  <p className="text-sm sm:text-base text-zinc-900 font-medium leading-relaxed">
-                    {t.projectDesc}
-                  </p>
-                </div>
+
+              <div className="mt-6 rounded-xl border border-white/70 bg-white/35 px-4 py-5 text-center">
+                {activeStep === 0 && (
+                  <>
+                    <WaveBars />
+                    <p className="mt-3 text-sm text-zinc-700">{t.step1Desc}</p>
+                  </>
+                )}
+                {activeStep === 1 && (
+                  <>
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#3f6f5c] text-white">
+                      <MicIcon className="h-5 w-5" />
+                    </div>
+                    <p className="mt-3 text-sm text-zinc-700">{t.step2Desc}</p>
+                  </>
+                )}
+                {activeStep === 2 && (
+                  <>
+                    <SparklineMark className="mx-auto h-10 w-20 text-[#b8862a]" />
+                    <p className="mt-3 text-sm text-zinc-700">{t.step3Desc}</p>
+                  </>
+                )}
               </div>
             </div>
-          </TiltCard>
+          </Reveal>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              const on = activeStep === index;
+              return (
+                <Reveal key={step.n} delay={index * 70}>
+                  <TiltCard maxTilt={8}>
+                    <div
+                      className={`glass-card relative h-full overflow-hidden rounded-2xl bg-linear-to-br p-7 ${step.tint}`}
+                      style={{
+                        outline: on ? `2px solid ${step.accent}` : undefined,
+                        outlineOffset: 2,
+                      }}
+                    >
+                      <div className="mb-5 flex items-center justify-between">
+                        <div
+                          className="flex h-10 w-10 items-center justify-center rounded-full text-lg font-black text-white"
+                          style={{ background: step.accent }}
+                        >
+                          {index + 1}
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                          {step.n}
+                        </span>
+                      </div>
+                      <div className="mb-3 flex items-center gap-2 text-zinc-600">
+                        <Icon
+                          className="h-4 w-4"
+                          style={{ color: step.accent }}
+                        />
+                        <span className="text-xs font-bold uppercase tracking-[0.08em]">
+                          {step.title}
+                        </span>
+                      </div>
+                      <p className="text-sm leading-6 text-zinc-700">
+                        {step.desc}
+                      </p>
+                    </div>
+                  </TiltCard>
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
       </section>
 
-      {/* ================================================================
-          7. MOTIVATIONAL QUOTE SECTION — Soft Emerald Leaf Theme
-          ================================================================ */}
-      <section className="py-20 px-4 bg-linear-to-b from-[#FFD8C7] via-[#D5EADF] to-[#FFF5ED] transition-colors duration-700 border-t border-secondary/20">
-        <div className="max-w-3xl mx-auto text-center">
-          <p className="text-5xl mb-4 animate-bounce-gentle">🌱</p>
-          <blockquote className="text-2xl sm:text-4xl font-hindi text-zinc-900 font-extrabold leading-relaxed mb-4">
-            &ldquo;हर शब्द एक कदम है, हर कदम एक उपलब्धि है&rdquo;
-          </blockquote>
-          <p className="text-base text-zinc-900 font-semibold">
-            Every word is a step, every step is an achievement
-          </p>
+      <ColorBridge from="#e4eee8" to="#e6eef3" />
+
+      <section className="bg-[#e6eef3] px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="mb-12 text-center">
+            <h2 className="mt-5 text-3xl font-black text-zinc-900 sm:text-5xl">
+              {t.featuresTitle}
+            </h2>
+            <p className="mt-4 text-base text-zinc-700">{t.featuresSubtitle}</p>
+          </Reveal>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {featureCards.map((feature, i) => (
+              <Reveal key={feature.title} delay={i * 50}>
+                <TiltCard maxTilt={8}>
+                  <div
+                    className={`glass-card relative h-50 overflow-hidden rounded-2xl bg-linear-to-br p-7 ${feature.tint}`}
+                  >
+                    <div className="absolute inset-0 flex items-center justify-center text-8xl opacity-20">
+                      {feature.icon}
+                    </div>
+                    <div className="relative z-10">
+                      <h3 className="text-2xl font-extrabold text-zinc-900">
+                        {feature.title}
+                      </h3>
+                      <p className="mt-4 text-sm leading-6 text-zinc-700">
+                        {feature.desc}
+                      </p>
+                    </div>
+                  </div>
+                </TiltCard>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
-    </div>
+
+      <ColorBridge from="#e6eef3" to="#ece6d8" />
+
+      {/* <section className="bg-[#ece6d8] px-4 py-16 sm:px-6 lg:px-8">
+        <Reveal>
+          <div className="glass-card mx-auto max-w-4xl rounded-3xl p-8 sm:p-12">
+            <div className="flex flex-col items-center gap-6 md:flex-row">
+              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-[#c45c3e] text-3xl shadow-lg shadow-[#c45c3e]/20">
+                🎓
+              </div>
+              <div className="text-center md:text-left">
+                <span className="inline-block rounded-md bg-[#f3d7c8] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#8a4634]">
+                  {t.projectBadge}
+                </span>
+                <h3 className="mt-3 text-2xl font-black text-zinc-900 sm:text-3xl">
+                  {t.projectTitle}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-zinc-700 sm:text-base">
+                  {t.projectDesc}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </section> */}
+
+      <ColorBridge from="#ece6d8" to="#f4eee4" />
+
+      <section className="bg-[#f4eee4] px-4 pb-10 sm:px-6 lg:px-8 relative">
+        <Image
+          src="/progressBar.png"
+          alt="Progress bar"
+          fill
+          className="absolute inset-0 -my-10 object-contain opacity-60"
+          priority
+        />
+        <Reveal className="mx-auto max-w-3xl text-center">
+          <div className="relative mx-auto w-full h-48 sm:h-56 md:h-72">
+            <div className="relative z-10 flex flex-col items-center justify-center h-full px-6">
+              <blockquote className="text-2xl font-black leading-relaxed text-zinc-900 sm:text-4xl">
+                हर शब्द एक कदम है, हर कदम एक उपलब्धि है
+              </blockquote>
+              <p className="mt-4 text-base text-zinc-800">
+                Every word is a step, every step is an achievement.
+              </p>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+    </main>
   );
 }
