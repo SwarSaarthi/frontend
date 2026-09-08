@@ -8,7 +8,7 @@ import Image from "next/image";
 
 function NavbarInner() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { t, toggleLang } = useLanguage();
+  const { t, toggleLang, lang } = useLanguage();
   const pathname = usePathname();
 
   // navLinks is memoised — without this, a new array on every parent re-render
@@ -74,6 +74,12 @@ function NavbarInner() {
               </Link>
             ))}
             <span className="w-px h-4 bg-line mx-2" />
+            <Link
+              href="/login"
+              className="px-3.5 py-1.5 rounded-full text-[13px] font-medium border border-line bg-white text-ink hover:bg-stone-50 hover:border-stone-strong transition-colors duration-150"
+            >
+              {lang === "hi" ? "लॉग इन" : "Sign In"}
+            </Link>
             <button
               onClick={toggleLang}
               className="px-3 py-1.5 rounded-full text-xs font-medium border border-line bg-white text-ink-soft hover:border-stone-strong hover:text-ink transition-colors duration-150"

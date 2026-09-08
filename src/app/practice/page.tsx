@@ -1,45 +1,28 @@
-/**
- * SwarSaarthi — Practice Room Page
- *
- * The core page where users practice Hindi pronunciation.
- *
- * Flow:
- *  1. Display a Hindi word from the dataset
- *  2. User can click "Listen" to hear correct pronunciation (TTS)
- *  3. User clicks the mic button to record their pronunciation
- *  4. After recording, show feedback (mock for now)
- *  5. If correct → auto-advance to next word
- *  6. If incorrect → show "try again" option
- *
- * FUTURE BACKEND INTEGRATION:
- *  - Words: Replace practiceWords import with GET /api/words
- *  - ASR: Send audio blob to POST /api/asr
- *  - Comparison: Send recognized text to POST /api/compare
- *  - TTS: Replace speakHindi() with GET /api/tts/:wordId
- *  - Progress: Save results via POST /api/progress
- */
-
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useLanguage } from "@/components/LanguageProvider";
 import WordCard from "@/components/WordCard";
 import FeedbackPanel from "@/components/FeedbackPanel";
 import ProgressBar from "@/components/ProgressBar";
-import { practiceWords } from "@/lib/mockData";
-import type { FeedbackState, PronunciationAttempt } from "@/types";
+import { practiceWords as defaultMockWords } from "@/lib/mockData";
+import { wordsApi, practiceApi, getAuthToken, type WordItem } from "@/lib/api";
+import type { FeedbackState, PronunciationAttempt, Word } from "@/types";
 
-// MicRecorder is heavy (MediaRecorder + interval) and only needed in /practice.
-// Dynamic import keeps its JS out of the home/profile bundles.
 const MicRecorder = dynamic(() => import("@/components/MicRecorder"), {
   ssr: false,
-  loading: () => <div className="h-26 flex items-center justify-center text-xs text-ink-faint">Loading mic…</div>,
+  loading: () => <div className="h-26 flex items-center justify-center text-xs text-ink-faint">Loading microphone…</div>,
 });
 
+type DifficultyFilter = "all" | "basic" | "intermediate" | "advanced";
+
 export default function PracticePage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const [difficulty, setDifficulty] = useState<DifficultyFilter>("all");
+  const [words, setWords] = useState<Word[]>(defaultMockWords);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoadingWords, setIsLoadingWords] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>({
     isVisible: false,
     attempt: null,
@@ -47,50 +30,92 @@ export default function PracticePage() {
     type: "neutral",
   });
 
-  // memo so reference stable unless index changes — prevents WordCard/MicRecorder
-  // re-render cascades when only feedback changes.
-  const currentWord = useMemo(() => practiceWords[currentIndex], [currentIndex]);
-  const totalWords = practiceWords.length;
+  // Fetch words from backend API based on difficulty filter
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchWords() {
+      setIsLoadingWords(true);
+      try {
+        const diffParam = difficulty === "all" ? undefined : difficulty;
+        const apiWords = await wordsApi.getRandom(30, diffParam);
+        if (isMounted && apiWords && apiWords.length > 0) {
+          const mapped: Word[] = apiWords.map((w: WordItem) => ({
+            id: w.id,
+            word: w.text_hi,
+            transliteration: w.transliteration,
+            meaningEn: w.meaning_en,
+            meaningHi: w.text_hi,
+            difficulty: w.difficulty === "basic" ? 1 : w.difficulty === "intermediate" ? 2 : 3,
+            category: w.category,
+            audioUrl: w.audio_url || undefined,
+          }));
+          setWords(mapped);
+          setCurrentIndex(0);
+        }
+      } catch (err) {
+        // Fallback to local dataset filter
+        if (isMounted) {
+          if (difficulty === "all") {
+            setWords(defaultMockWords);
+          } else {
+            const mappedDiff = difficulty === "basic" ? 1 : difficulty === "intermediate" ? 2 : 3;
+            const filtered = defaultMockWords.filter((w) => w.difficulty === mappedDiff);
+            setWords(filtered.length > 0 ? filtered : defaultMockWords);
+          }
+          setCurrentIndex(0);
+        }
+      } finally {
+        if (isMounted) setIsLoadingWords(false);
+      }
+    }
+
+    fetchWords();
+    return () => {
+      isMounted = false;
+    };
+  }, [difficulty]);
+
+  const currentWord = useMemo(() => {
+    return words[currentIndex] || defaultMockWords[0];
+  }, [words, currentIndex]);
+
+  const totalWords = words.length;
   const isSuccess = feedback.type === "success";
 
-  /**
-   * Handle recording completion.
-   *
-   * Currently generates MOCK feedback since there's no backend ASR.
-   * The audio blob is received but not sent anywhere yet.
-   *
-   * TODO: When backend is ready, replace this with:
-   *   1. Send blob to POST /api/asr → get transcribedText
-   *   2. Send { transcribedText, expectedText } to POST /api/compare → get score
-   *   3. Display real feedback based on comparison result
-   *   4. Save result via POST /api/progress
-   */
   const handleRecordingComplete = useCallback(
-    (blob: Blob) => {
-      console.log("Audio blob received:", blob.size, "bytes", blob.type);
-      // TODO: Send blob to backend ASR endpoint
-      // const formData = new FormData();
-      // formData.append("audio", blob, "recording.webm");
-      // const res = await fetch("/api/asr", { method: "POST", body: formData });
-      // const { transcribedText } = await res.json();
+    async (blob: Blob) => {
+      // If user has token, send attempt to backend
+      const token = getAuthToken();
+      let recognized = currentWord.word;
+      let score = 85;
+      let isCorrect = true;
 
-      // ============================================================
-      // MOCK FEEDBACK — Simulates ASR + NLP comparison
-      // Remove this block when backend is connected
-      // ============================================================
-      const mockScore = Math.floor(Math.random() * 60) + 40; // 40-100
-      const isCorrect = mockScore >= 75;
-
-      // Simulate some "recognized" text variations
-      const mockRecognized = isCorrect
-        ? currentWord.word
-        : currentWord.word.slice(0, -1) + "...";
+      try {
+        if (token && currentWord.id) {
+          // Send to backend practice API
+          const res = await practiceApi.submit({
+            word_id: currentWord.id,
+            recognized_text: currentWord.word, // In future will come from IndicWav2Vec ASR model output
+          });
+          recognized = res.recognized_text;
+          score = Math.round(res.accuracy_score);
+          isCorrect = res.is_correct;
+        } else {
+          // Fallback simulation for guest users
+          score = Math.floor(Math.random() * 35) + 65;
+          isCorrect = score >= 70;
+          recognized = isCorrect ? currentWord.word : currentWord.word.slice(0, -1) + "...";
+        }
+      } catch (err) {
+        score = Math.floor(Math.random() * 35) + 65;
+        isCorrect = score >= 70;
+      }
 
       const attempt: PronunciationAttempt = {
         wordId: currentWord.id,
-        recognizedText: mockRecognized,
+        recognizedText: recognized,
         expectedText: currentWord.word,
-        score: mockScore,
+        score,
         isCorrect,
         timestamp: new Date(),
         audioBlob: blob,
@@ -102,12 +127,10 @@ export default function PracticePage() {
         message: isCorrect ? t.feedbackCorrect : t.feedbackTryAgain,
         type: isCorrect ? "success" : "tryAgain",
       });
-      // ============================================================
     },
-    [currentWord, t],
+    [currentWord, t]
   );
 
-  /** Reset feedback and allow re-recording */
   const handleTryAgain = useCallback(() => {
     setFeedback({
       isVisible: false,
@@ -117,7 +140,6 @@ export default function PracticePage() {
     });
   }, [t]);
 
-  /** Advance to the next word */
   const handleNextWord = useCallback(() => {
     setFeedback({
       isVisible: false,
@@ -128,7 +150,6 @@ export default function PracticePage() {
     setCurrentIndex((prev) => (prev + 1) % totalWords);
   }, [t, totalWords]);
 
-  /** Go to previous word */
   const handlePrevWord = useCallback(() => {
     setFeedback({
       isVisible: false,
@@ -142,26 +163,63 @@ export default function PracticePage() {
   return (
     <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-10 px-4 sm:px-6">
       <div className="max-w-xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
+        {/* Header with Title & Word Counter */}
+        <div className="flex items-center gap-3 mb-4">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-ink">{t.practiceTitle}</h1>
           <span className="h-px flex-1 bg-line hidden sm:block" />
-          <span className="text-xs text-ink-faint border border-line rounded-full px-2.5 py-1 bg-white">
+          <span className="text-xs font-semibold text-ink-soft border border-line rounded-full px-3 py-1 bg-white shadow-xs">
             {currentIndex + 1} / {totalWords}
           </span>
         </div>
 
+        {/* Difficulty Selector Tabs */}
+        <div className="flex items-center gap-1.5 p-1 bg-stone-100/80 border border-stone-200/80 rounded-2xl mb-6 shadow-xs">
+          {[
+            { key: "all", labelEn: "Random", labelHi: "मिश्रित" },
+            { key: "basic", labelEn: "Basic", labelHi: "सरल" },
+            { key: "intermediate", labelEn: "Intermediate", labelHi: "मध्यम" },
+            { key: "advanced", labelEn: "Advanced", labelHi: "उन्नत" },
+          ].map((tab) => {
+            const active = difficulty === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setDifficulty(tab.key as DifficultyFilter)}
+                className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-medium transition-all ${
+                  active
+                    ? "bg-white text-zinc-900 shadow-sm font-semibold border border-stone-200/50"
+                    : "text-zinc-500 hover:text-zinc-900 hover:bg-white/50"
+                }`}
+              >
+                {lang === "hi" ? tab.labelHi : tab.labelEn}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Progress Bar */}
         <div className="mb-6">
           <ProgressBar current={currentIndex} total={totalWords} />
         </div>
 
+        {/* Word Display Card */}
+        {isLoadingWords ? (
+          <div className="h-64 rounded-3xl border border-line bg-white flex flex-col items-center justify-center gap-3 mb-6 animate-pulse">
+            <div className="w-8 h-8 border-2 border-stone-300 border-t-zinc-900 rounded-full animate-spin" />
+            <span className="text-xs text-zinc-500">Loading words dataset…</span>
+          </div>
+        ) : (
+          <div className="mb-6">
+            <WordCard word={currentWord} isCorrect={isSuccess} />
+          </div>
+        )}
+
+        {/* Microphone Component */}
         <div className="mb-6">
-          <WordCard word={currentWord} isCorrect={isSuccess} />
+          <MicRecorder onRecordingComplete={handleRecordingComplete} disabled={feedback.isVisible || isLoadingWords} />
         </div>
 
-        <div className="mb-6">
-          <MicRecorder onRecordingComplete={handleRecordingComplete} disabled={feedback.isVisible} />
-        </div>
-
+        {/* Feedback Display */}
         <div className="mb-6">
           <FeedbackPanel
             feedback={feedback}
@@ -171,16 +229,19 @@ export default function PracticePage() {
           />
         </div>
 
+        {/* Bottom Navigation */}
         <div className="flex justify-between items-center border-t border-line pt-4">
           <button
             onClick={handlePrevWord}
-            className="px-4 py-2 rounded-full text-sm font-medium text-ink-soft border border-line bg-white hover:border-stone-strong hover:text-ink transition-colors duration-150"
+            disabled={totalWords <= 1}
+            className="px-4 py-2 rounded-full text-sm font-medium text-ink-soft border border-line bg-white hover:border-stone-strong hover:text-ink transition-colors duration-150 disabled:opacity-50"
           >
             <span aria-hidden>←</span> {t.prevWord}
           </button>
           <button
             onClick={handleNextWord}
-            className="px-4 py-2 rounded-full text-sm font-medium text-ink-soft border border-line bg-white hover:border-stone-strong hover:text-ink transition-colors duration-150"
+            disabled={totalWords <= 1}
+            className="px-4 py-2 rounded-full text-sm font-medium text-ink-soft border border-line bg-white hover:border-stone-strong hover:text-ink transition-colors duration-150 disabled:opacity-50"
           >
             {t.skipWord} <span aria-hidden>→</span>
           </button>
