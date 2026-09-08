@@ -5,8 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authApi, setAuthToken } from "@/lib/api";
 import { useLanguage } from "@/components/LanguageProvider";
+import AuthGuard from "@/components/AuthGuard";
 
 export default function LoginPage() {
+  return (
+    <AuthGuard mode="guest">
+      <LoginForm />
+    </AuthGuard>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const { lang } = useLanguage();
   const [email, setEmail] = useState("");

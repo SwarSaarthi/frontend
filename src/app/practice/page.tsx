@@ -9,6 +9,7 @@ import ProgressBar from "@/components/ProgressBar";
 import { practiceWords as defaultMockWords } from "@/lib/mockData";
 import { wordsApi, practiceApi, getAuthToken, type WordItem } from "@/lib/api";
 import type { FeedbackState, PronunciationAttempt, Word } from "@/types";
+import AuthGuard from "@/components/AuthGuard";
 
 const MicRecorder = dynamic(() => import("@/components/MicRecorder"), {
   ssr: false,
@@ -18,6 +19,14 @@ const MicRecorder = dynamic(() => import("@/components/MicRecorder"), {
 type DifficultyFilter = "all" | "basic" | "intermediate" | "advanced";
 
 export default function PracticePage() {
+  return (
+    <AuthGuard mode="protected">
+      <PracticeContent />
+    </AuthGuard>
+  );
+}
+
+function PracticeContent() {
   const { t, lang } = useLanguage();
   const [difficulty, setDifficulty] = useState<DifficultyFilter>("all");
   const [words, setWords] = useState<Word[]>(defaultMockWords);

@@ -1,25 +1,48 @@
 "use client";
 
-import { useState, useMemo, useCallback, memo } from "react";
+import { useState, useMemo, useCallback, memo, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
+import { getAuthToken, removeAuthToken } from "@/lib/api";
 import Image from "next/image";
 
 function NavbarInner() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t, toggleLang, lang } = useLanguage();
   const pathname = usePathname();
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Re-check token on every route change so the navbar updates after login/logout
+  useEffect(() => {
+    setIsLoggedIn(!!getAuthToken());
+  }, [pathname]);
+
+  // Listen for storage events (login/logout in other tabs)
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "swarsaarthi_token") {
+        setIsLoggedIn(!!e.newValue);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   // navLinks is memoised — without this, a new array on every parent re-render
   // would cause the .map list to reconcile as all-new nodes.
   const navLinks = useMemo(
     () => [
       { href: "/", label: t.navHome },
-      { href: "/practice", label: t.navPractice },
-      { href: "/profile", label: t.navProfile },
+      ...(isLoggedIn
+        ? [
+            { href: "/practice", label: t.navPractice },
+            { href: "/profile", label: t.navProfile },
+          ]
+        : []),
     ],
-    [t.navHome, t.navPractice, t.navProfile],
+    [t.navHome, t.navPractice, t.navProfile, isLoggedIn],
   );
 
   const isActive = useCallback((href: string) => pathname === href, [pathname]);
@@ -29,6 +52,13 @@ function NavbarInner() {
     toggleLang();
     setIsMobileMenuOpen(false);
   }, [toggleLang]);
+
+  const handleLogout = useCallback(() => {
+    removeAuthToken();
+    setIsLoggedIn(false);
+    setIsMobileMenuOpen(false);
+    router.push("/");
+  }, [router]);
 
   return (
     <nav className="sticky top-0 z-50 bg-paper/90 backdrop-blur-[6px] border-b border-line">
@@ -74,12 +104,21 @@ function NavbarInner() {
               </Link>
             ))}
             <span className="w-px h-4 bg-line mx-2" />
-            <Link
-              href="/login"
-              className="px-3.5 py-1.5 rounded-full text-[13px] font-medium border border-line bg-white text-ink hover:bg-stone-50 hover:border-stone-strong transition-colors duration-150"
-            >
-              {lang === "hi" ? "लॉग इन" : "Sign In"}
-            </Link>
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="px-3.5 py-1.5 rounded-full text-[13px] font-medium border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors duration-150"
+              >
+                {lang === "hi" ? "लॉग आउट" : "Sign Out"}
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="px-3.5 py-1.5 rounded-full text-[13px] font-medium border border-line bg-white text-ink hover:bg-stone-50 hover:border-stone-strong transition-colors duration-150"
+              >
+                {lang === "hi" ? "लॉग इन" : "Sign In"}
+              </Link>
+            )}
             <button
               onClick={toggleLang}
               className="px-3 py-1.5 rounded-full text-xs font-medium border border-line bg-white text-ink-soft hover:border-stone-strong hover:text-ink transition-colors duration-150"
@@ -128,6 +167,24 @@ function NavbarInner() {
                   {link.label}
                 </Link>
               ))}
+
+              {isLoggedIn ? (
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 border border-red-200 bg-white text-left hover:bg-red-50 transition-colors"
+                >
+                  {lang === "hi" ? "लॉग आउट" : "Sign Out"}
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={handleCloseMenu}
+                  className="px-4 py-2.5 rounded-xl text-sm font-medium text-ink border border-line bg-white text-left hover:bg-stone-50 transition-colors"
+                >
+                  {lang === "hi" ? "लॉग इन" : "Sign In"}
+                </Link>
+              )}
+
               <button
                 onClick={handleLangToggle}
                 className="px-4 py-2.5 rounded-xl text-sm font-medium text-ink border border-line bg-white text-left flex items-center gap-2"
@@ -153,3 +210,4 @@ function NavbarInner() {
 }
 
 export default memo(NavbarInner);
+

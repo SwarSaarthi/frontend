@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { FeedbackState } from "@/types";
 
@@ -30,18 +30,13 @@ function RetryIcon(props: React.SVGProps<SVGSVGElement>) {
 function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: FeedbackPanelProps) {
   const { t } = useLanguage();
 
-  const isSuccess = feedback.type === "success";
-  const isTryAgain = feedback.type === "tryAgain";
-
-  // early exit — memo still helps because parent may re-render with same invisible feedback
   if (!feedback.isVisible) return null;
 
+  const isSuccess = feedback.type === "success";
+  const isTryAgain = feedback.type === "tryAgain";
   const score = feedback.attempt?.score ?? 0;
-  const scoreColor = useMemo(() => {
-    if (score >= 75) return "bg-moss";
-    if (score >= 50) return "bg-ink";
-    return "bg-error";
-  }, [score]);
+
+  const scoreColor = score >= 75 ? "bg-moss" : score >= 50 ? "bg-ink" : "bg-error";
 
   return (
     <div className={`card p-5 sm:p-6 ${isSuccess ? "border-moss bg-moss-soft/40" : isTryAgain ? "bg-error-light border-error/20" : ""}`}>

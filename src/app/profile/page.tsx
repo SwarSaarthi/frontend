@@ -17,6 +17,7 @@ import {
   type DifficultyProgress,
 } from "@/lib/api";
 import type { WordProgress } from "@/types";
+import AuthGuard from "@/components/AuthGuard";
 
 function DocIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -47,6 +48,14 @@ function FlameIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function ProfilePage() {
+  return (
+    <AuthGuard mode="protected">
+      <ProfileContent />
+    </AuthGuard>
+  );
+}
+
+function ProfileContent() {
   const router = useRouter();
   const { t, lang } = useLanguage();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
