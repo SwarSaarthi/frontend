@@ -96,9 +96,9 @@ export const i18n = {
     transliterationLabel: "Transliteration",
 
     // Feedback
-    feedbackCorrect: "Excellent — you pronounced it correctly.",
+    feedbackCorrect: "Excellent - you pronounced it correctly.",
     feedbackTryAgain:
-      "Almost there — listen carefully and try again.",
+      "Almost there - listen carefully and try again.",
     feedbackNeutral: "Press the mic button and speak the word shown above.",
     yourPronunciation: "You said",
     expectedPronunciation: "Expected",

@@ -34,18 +34,21 @@ export interface PronunciationAttempt {
   wordId: string;
   /** The text recognized by ASR from user's speech */
   recognizedText: string;
+  /** The ASR model's raw prediction (same as recognizedText when using ASR) */
+  predictionText: string;
   /** The expected/correct text */
   expectedText: string;
   /** Similarity score between 0 and 100 */
   score: number;
+  /** Character Error Rate from jiwer (0.0 = perfect) */
+  cer: number;
   /** Whether the attempt was considered correct (score >= threshold) */
   isCorrect: boolean;
+  /** Human-readable feedback from the backend */
+  feedbackMessage: string;
   /** Timestamp of the attempt */
   timestamp: Date;
-  /**
-   * TODO: The raw audio blob recorded by the user
-   * Will be sent to backend: POST /api/asr
-   */
+  /** The raw audio blob recorded by the user (for playback) */
   audioBlob?: Blob;
 }
 

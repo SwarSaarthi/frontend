@@ -57,6 +57,35 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
   return res.json();
 }
 
+// ── FormData Fetch Wrapper (for file uploads) ────────────────────
+async function apiFetchFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  // Do NOT set Content-Type — browser sets it with boundary for multipart
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!res.ok) {
+    let errorDetail = "An unexpected error occurred.";
+    try {
+      const errJson = await res.json();
+      errorDetail = errJson.detail || errJson.message || errorDetail;
+    } catch {
+      // ignore
+    }
+    throw new Error(errorDetail);
+  }
+
+  return res.json();
+}
+
 // ── Types ────────────────────────────────────────────────────────
 export interface User {
   id: string;
@@ -93,6 +122,24 @@ export interface PracticeSubmitResult {
   recognized_text: string;
   accuracy_score: number;
   is_correct: boolean;
+  details: {
+    char_ratio: number;
+    token_sort_ratio: number;
+    partial_ratio: number;
+  };
+  needs_focus: boolean;
+  streak: number;
+}
+
+export interface AsrPredictResult {
+  session_id: string;
+  word_id: string;
+  target_text: string;
+  prediction_text: string;
+  accuracy_score: number;
+  cer: number;
+  is_correct: boolean;
+  feedback: string;
   details: {
     char_ratio: number;
     token_sort_ratio: number;
@@ -216,4 +263,13 @@ export const profileApi = {
     apiFetch<{ calendar: StreakDay[] }>(`/api/profile/streak-calendar?days=${days}`),
 
   getProgress: () => apiFetch<DifficultyProgress>("/api/profile/progress"),
+};
+
+export const asrApi = {
+  predict: (audio: Blob, wordId: string) => {
+    const formData = new FormData();
+    formData.append("audio", audio, "recording.webm");
+    formData.append("word_id", wordId);
+    return apiFetchFormData<AsrPredictResult>("/api/asr/predict", formData);
+  },
 };

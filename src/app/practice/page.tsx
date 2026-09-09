@@ -7,7 +7,7 @@ import WordCard from "@/components/WordCard";
 import FeedbackPanel from "@/components/FeedbackPanel";
 import ProgressBar from "@/components/ProgressBar";
 import { practiceWords as defaultMockWords } from "@/lib/mockData";
-import { wordsApi, practiceApi, getAuthToken, type WordItem } from "@/lib/api";
+import { wordsApi, practiceApi, asrApi, getAuthToken, type WordItem } from "@/lib/api";
 import type { FeedbackState, PronunciationAttempt, Word } from "@/types";
 import AuthGuard from "@/components/AuthGuard";
 
@@ -93,39 +93,76 @@ function PracticeContent() {
 
   const handleRecordingComplete = useCallback(
     async (blob: Blob) => {
-      // If user has token, send attempt to backend
       const token = getAuthToken();
-      let recognized = currentWord.word;
-      let score = 85;
-      let isCorrect = true;
+      let recognized = "";
+      let prediction = "";
+      let score = 0;
+      let isCorrect = false;
+      let cerValue = 1.0;
+      let feedbackMsg = "Unable to process your recording.";
 
       try {
         if (token && currentWord.id) {
-          // Send to backend practice API
-          const res = await practiceApi.submit({
-            word_id: currentWord.id,
-            recognized_text: currentWord.word, // In future will come from IndicWav2Vec ASR model output
-          });
-          recognized = res.recognized_text;
+          // ── Primary: send audio to ASR endpoint ────────────
+          const res = await asrApi.predict(blob, currentWord.id);
+          recognized = res.prediction_text;
+          prediction = res.prediction_text;
           score = Math.round(res.accuracy_score);
           isCorrect = res.is_correct;
+          cerValue = res.cer;
+          feedbackMsg = res.feedback;
         } else {
           // Fallback simulation for guest users
           score = Math.floor(Math.random() * 35) + 65;
           isCorrect = score >= 70;
-          recognized = isCorrect ? currentWord.word : currentWord.word.slice(0, -1) + "...";
+          recognized = isCorrect ? currentWord.word : currentWord.word.slice(0, -1) + "…";
+          prediction = recognized;
+          cerValue = isCorrect ? 0.1 : 0.5;
+          feedbackMsg = isCorrect ? "Good job!" : "Try again.";
         }
       } catch (err) {
-        score = Math.floor(Math.random() * 35) + 65;
-        isCorrect = score >= 70;
+        // If ASR fails, try the old practice/submit endpoint as fallback
+        try {
+          if (token && currentWord.id) {
+            const fallback = await practiceApi.submit({
+              word_id: currentWord.id,
+              recognized_text: currentWord.word,
+            });
+            recognized = fallback.recognized_text;
+            prediction = fallback.recognized_text;
+            score = Math.round(fallback.accuracy_score);
+            isCorrect = fallback.is_correct;
+            cerValue = 0;
+            feedbackMsg = isCorrect
+              ? "Great pronunciation!"
+              : "Keep practicing — try to match the correct pronunciation.";
+          } else {
+            score = Math.floor(Math.random() * 35) + 65;
+            isCorrect = score >= 70;
+            recognized = currentWord.word;
+            prediction = recognized;
+            cerValue = 0.3;
+            feedbackMsg = "Could not connect to ASR service.";
+          }
+        } catch {
+          score = 50;
+          isCorrect = false;
+          recognized = "—";
+          prediction = "—";
+          cerValue = 1.0;
+          feedbackMsg = "Could not connect to the server. Please check your connection.";
+        }
       }
 
       const attempt: PronunciationAttempt = {
         wordId: currentWord.id,
         recognizedText: recognized,
+        predictionText: prediction,
         expectedText: currentWord.word,
         score,
+        cer: cerValue,
         isCorrect,
+        feedbackMessage: feedbackMsg,
         timestamp: new Date(),
         audioBlob: blob,
       };
