@@ -46,11 +46,16 @@ export interface PronunciationAttempt {
   isCorrect: boolean;
   /** Human-readable feedback from the backend */
   feedbackMessage: string;
+  /** Categorized feedback tier */
+  feedbackTier?: "excellent" | "almost_there" | "needs_improvement";
   /** Timestamp of the attempt */
   timestamp: Date;
   /** The raw audio blob recorded by the user (for playback) */
   audioBlob?: Blob;
 }
+
+export type FeedbackTier = "excellent" | "almost_there" | "needs_improvement";
+export type FeedbackType = "success" | "almostThere" | "needsImprovement" | "tryAgain" | "neutral";
 
 /** Aggregated stats for a single word */
 export interface WordProgress {
@@ -116,7 +121,7 @@ export interface FeedbackState {
   /** Feedback message to display */
   message: string;
   /** Type of feedback for styling */
-  type: "success" | "tryAgain" | "neutral";
+  type: FeedbackType;
 }
 
 /** Supported languages for the UI */

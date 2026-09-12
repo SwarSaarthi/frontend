@@ -139,6 +139,7 @@ export interface AsrPredictResult {
   accuracy_score: number;
   cer: number;
   is_correct: boolean;
+  feedback_tier?: "excellent" | "almost_there" | "needs_improvement";
   feedback: string;
   details: {
     char_ratio: number;

@@ -48,7 +48,7 @@ export const i18n = {
     empathyTitle: "Designed with Empathy & Kindness",
     empathySubtitle: "Speech articulation is a journey. SwarSaarthi provides a safe, patient space to practice Hindi pronunciation comfortably without any stress.",
     empathyCard1Title: "Zero Judgment Space",
-    empathyCard1Desc: "Practice as many times as you like. There are no timers pushing you and no social pressure — just you and your assistive guide.",
+    empathyCard1Desc: "Practice as many times as you like. There are no timers pushing you and no social pressure - just you and your assistive guide.",
     empathyCard1Tag: "100% Patient & Encouraging",
     empathyCard2Title: "Gentle Audio Guidance",
     empathyCard2Desc: "Listen to standard Hindi pronunciations repeatedly. Replay words slowly to catch phonetic nuances and syllabic flow.",
@@ -72,7 +72,7 @@ export const i18n = {
     feature5Title: "Personal Dashboard",
     feature5Desc: "Review your practiced word stats, accuracy trends, day streak, and focus on difficult words in your profile.",
     feature6Title: "Private Assistive Tool",
-    feature6Desc: "Built purely as an assistive practice system for educational and personal improvement — not a medical diagnostic tool.",
+    feature6Desc: "Built purely as an assistive practice system for educational and personal improvement - not a medical diagnostic tool.",
 
     // Student Project Section
     projectBadge: "Final Year Engineering Capstone Project",
@@ -96,9 +96,10 @@ export const i18n = {
     transliterationLabel: "Transliteration",
 
     // Feedback
-    feedbackCorrect: "Excellent - you pronounced it correctly.",
-    feedbackTryAgain:
-      "Almost there - listen carefully and try again.",
+    feedbackCorrect: "Excellent! Perfect pronunciation.",
+    feedbackAlmostThere: "Almost there - listen carefully and try again.",
+    feedbackNeedsImprovement: "Needs improvement - listen to the reference audio and try again slowly.",
+    feedbackTryAgain: "Try Again",
     feedbackNeutral: "Press the mic button and speak the word shown above.",
     yourPronunciation: "You said",
     expectedPronunciation: "Expected",
@@ -166,7 +167,7 @@ export const i18n = {
     empathyTitle: "सहानुभूति और दयालुता से निर्मित",
     empathySubtitle: "वाक् उच्चारण एक यात्रा है। स्वर सारथी बिना किसी तनाव के आराम से हिंदी उच्चारण का अभ्यास करने के लिए एक सुरक्षित, धैर्यवान स्थान प्रदान करता है।",
     empathyCard1Title: "शून्य निर्णय स्थान",
-    empathyCard1Desc: "जितनी बार चाहें अभ्यास करें। आप पर कोई टाइमर नहीं और कोई सामाजिक दबाव नहीं — केवल आप और आपका सहायक सारथी।",
+    empathyCard1Desc: "जितनी बार चाहें अभ्यास करें। आप पर कोई टाइमर नहीं और कोई सामाजिक दबाव नहीं - केवल आप और आपका सहायक सारथी।",
     empathyCard1Tag: "100% धैर्यवान और उत्साहवर्धक",
     empathyCard2Title: "सौम्य ऑडियो मार्गदर्शन",
     empathyCard2Desc: "मानक हिंदी उच्चारण बार-बार सुनें। ध्वन्यात्मक बारीकियों और शब्दांश प्रवाह को समझने के लिए शब्दों को धीरे-धीरे फिर से चलाएं।",
@@ -190,7 +191,7 @@ export const i18n = {
     feature5Title: "व्यक्तिगत प्रगति डैशबोर्ड",
     feature5Desc: "अपनी प्रोफ़ाइल में अभ्यास किए गए शब्दों के आंकड़े, सटीकता रुझान और कठिन शब्दों की समीक्षा करें।",
     feature6Title: "सुरक्षित सहायक प्रणाली",
-    feature6Desc: "शैक्षणिक और व्यक्तिगत सुधार के लिए विशुद्ध रूप से एक सहायक अभ्यास प्रणाली के रूप में निर्मित — कोई चिकित्सीय निदान उपकरण नहीं।",
+    feature6Desc: "शैक्षणिक और व्यक्तिगत सुधार के लिए विशुद्ध रूप से एक सहायक अभ्यास प्रणाली के रूप में निर्मित - कोई चिकित्सीय निदान उपकरण नहीं।",
 
     // Student Project Section
     projectBadge: "अंतिम वर्ष इंजीनियरिंग कैपस्टोन प्रोजेक्ट",
@@ -214,9 +215,10 @@ export const i18n = {
     transliterationLabel: "लिप्यंतरण",
 
     // Feedback
-    feedbackCorrect: "बहुत बढ़िया - आपने सही उच्चारण किया।",
-    feedbackTryAgain:
-      "लगभग सही — ध्यान से सुनें और फिर से प्रयास करें।",
+    feedbackCorrect: "उत्कृष्ट! सटीक उच्चारण।",
+    feedbackAlmostThere: "लगभग सही - ध्यान से सुनें और पुनः प्रयास करें।",
+    feedbackNeedsImprovement: "सुधार की आवश्यकता है - ऑडियो ध्यान से सुनें और धीरे-धीरे बोलें।",
+    feedbackTryAgain: "पुनः प्रयास करें",
     feedbackNeutral: "माइक बटन दबाएँ और ऊपर दिखाया गया शब्द बोलें।",
     yourPronunciation: "आपने कहा",
     expectedPronunciation: "अपेक्षित",

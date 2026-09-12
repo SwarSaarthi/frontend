@@ -142,36 +142,53 @@ function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: 
   if (!feedback.isVisible) return null;
 
   const isSuccess = feedback.type === "success";
-  const isTryAgain = feedback.type === "tryAgain";
+  const isAlmostThere = feedback.type === "almostThere";
+  const isNeedsImprovement = feedback.type === "needsImprovement" || feedback.type === "tryAgain";
+
   const score = feedback.attempt?.score ?? 0;
   const cer = feedback.attempt?.cer ?? 0;
   const predictionText = feedback.attempt?.predictionText || feedback.attempt?.recognizedText || "—";
+
+  const tier = feedback.attempt?.feedbackTier || (
+    isSuccess ? "excellent" : isAlmostThere ? "almost_there" : "needs_improvement"
+  );
+
+  const titleHeader = tier === "excellent"
+    ? (t.feedbackCorrect || "Excellent!")
+    : tier === "almost_there"
+    ? (t.feedbackAlmostThere || "Almost there")
+    : (t.feedbackNeedsImprovement || "Needs improvement");
+
   const feedbackMessage = feedback.attempt?.feedbackMessage || feedback.message;
 
   return (
     <div className={`rounded-2xl border p-5 sm:p-6 transition-all ${
       isSuccess
         ? "border-emerald-200 bg-linear-to-br from-emerald-50/60 to-green-50/40"
-        : isTryAgain
-        ? "border-red-200/60 bg-linear-to-br from-red-50/50 to-orange-50/30"
-        : "border-stone-200 bg-white"
+        : isAlmostThere
+        ? "border-amber-200/80 bg-linear-to-br from-amber-50/60 to-yellow-50/30"
+        : "border-red-200/80 bg-linear-to-br from-red-50/60 to-rose-50/30"
     }`}>
       {/* Status Header */}
       <div className="flex items-start gap-3 mb-5">
-        <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${
+        <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border shadow-xs ${
           isSuccess
             ? "bg-emerald-500 text-white border-emerald-500"
-            : "bg-white border-stone-200 text-zinc-400"
+            : isAlmostThere
+            ? "bg-amber-500 text-white border-amber-500"
+            : "bg-red-500 text-white border-red-500"
         }`}>
           {isSuccess ? <CheckIcon className="w-4 h-4" /> : <RetryIcon className="w-4 h-4" />}
         </span>
         <div>
           <p className={`text-sm font-semibold leading-5 ${
-            isSuccess ? "text-emerald-700" : isTryAgain ? "text-red-600" : "text-zinc-500"
+            isSuccess ? "text-emerald-700" : isAlmostThere ? "text-amber-800" : "text-red-700"
           }`}>
-            {isSuccess ? (t.feedbackCorrect || "Correct!") : (t.feedbackTryAgain || "Try Again")}
+            {titleHeader}
           </p>
-          <p className="text-xs text-zinc-400 mt-0.5">{feedbackMessage}</p>
+          {feedbackMessage && feedbackMessage !== titleHeader && (
+            <p className="text-xs text-zinc-600 mt-0.5 leading-snug">{feedbackMessage}</p>
+          )}
         </div>
       </div>
 
@@ -184,7 +201,7 @@ function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: 
               <div className="rounded-xl bg-white border border-stone-200 px-4 py-2.5 text-center shadow-xs">
                 <p className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-0.5">CER</p>
                 <p className={`text-lg font-bold tabular-nums ${
-                  cer <= 0.15 ? "text-emerald-600" : cer <= 0.4 ? "text-amber-600" : "text-red-600"
+                  cer <= 0.20 ? "text-emerald-600" : cer <= 0.50 ? "text-amber-600" : "text-red-600"
                 }`}>{(cer * 100).toFixed(1)}%</p>
               </div>
               <p className="text-[10px] text-zinc-400 text-center leading-tight">
@@ -243,7 +260,7 @@ function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: 
             <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${
-                  score >= 75 ? "bg-emerald-500" : score >= 50 ? "bg-amber-500" : "bg-red-500"
+                  score >= 80 ? "bg-emerald-500" : score >= 50 ? "bg-amber-500" : "bg-red-500"
                 }`}
                 style={{ width: `${score}%` }}
               />
@@ -254,7 +271,7 @@ function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: 
 
       {/* Action Buttons */}
       <div className="flex gap-2.5 justify-center pt-1">
-        {isTryAgain && (
+        {!isSuccess && (
           <button
             onClick={onTryAgain}
             className="px-6 py-2.5 rounded-full text-sm font-semibold bg-zinc-900 text-white hover:bg-black active:scale-[0.98] transition-all duration-150 shadow-sm inline-flex items-center gap-1.5"

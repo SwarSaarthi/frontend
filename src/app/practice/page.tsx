@@ -8,7 +8,7 @@ import FeedbackPanel from "@/components/FeedbackPanel";
 import ProgressBar from "@/components/ProgressBar";
 import { practiceWords as defaultMockWords } from "@/lib/mockData";
 import { wordsApi, practiceApi, asrApi, getAuthToken, type WordItem } from "@/lib/api";
-import type { FeedbackState, PronunciationAttempt, Word } from "@/types";
+import type { FeedbackState, FeedbackTier, FeedbackType, PronunciationAttempt, Word } from "@/types";
 import AuthGuard from "@/components/AuthGuard";
 
 const MicRecorder = dynamic(() => import("@/components/MicRecorder"), {
@@ -100,6 +100,7 @@ function PracticeContent() {
       let isCorrect = false;
       let cerValue = 1.0;
       let feedbackMsg = "Unable to process your recording.";
+      let tier: FeedbackTier = "needs_improvement";
 
       try {
         if (token && currentWord.id) {
@@ -111,14 +112,20 @@ function PracticeContent() {
           isCorrect = res.is_correct;
           cerValue = res.cer;
           feedbackMsg = res.feedback;
+          tier = res.feedback_tier || (isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement");
         } else {
           // Fallback simulation for guest users
           score = Math.floor(Math.random() * 35) + 65;
-          isCorrect = score >= 70;
+          isCorrect = score >= 80;
           recognized = isCorrect ? currentWord.word : currentWord.word.slice(0, -1) + "…";
           prediction = recognized;
-          cerValue = isCorrect ? 0.1 : 0.5;
-          feedbackMsg = isCorrect ? "Good job!" : "Try again.";
+          cerValue = isCorrect ? 0.1 : score >= 50 ? 0.35 : 0.7;
+          tier = isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement";
+          feedbackMsg = isCorrect
+            ? "Excellent! Perfect pronunciation."
+            : score >= 50
+            ? "Good attempt! Listen carefully to the reference audio and try again."
+            : "The pronunciation needs improvement. Listen to the reference audio carefully and try speaking slowly.";
         }
       } catch (err) {
         // If ASR fails, try the old practice/submit endpoint as fallback
@@ -132,24 +139,29 @@ function PracticeContent() {
             prediction = fallback.recognized_text;
             score = Math.round(fallback.accuracy_score);
             isCorrect = fallback.is_correct;
-            cerValue = 0;
+            cerValue = isCorrect ? 0.1 : 0.4;
+            tier = isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement";
             feedbackMsg = isCorrect
               ? "Great pronunciation!"
-              : "Keep practicing — try to match the correct pronunciation.";
+              : score >= 50
+              ? "Keep practicing — try to match the correct pronunciation."
+              : "The pronunciation needs improvement. Try listening to the audio again.";
           } else {
             score = Math.floor(Math.random() * 35) + 65;
-            isCorrect = score >= 70;
+            isCorrect = score >= 80;
             recognized = currentWord.word;
             prediction = recognized;
             cerValue = 0.3;
+            tier = isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement";
             feedbackMsg = "Could not connect to ASR service.";
           }
         } catch {
-          score = 50;
+          score = 0;
           isCorrect = false;
           recognized = "—";
           prediction = "—";
           cerValue = 1.0;
+          tier = "needs_improvement";
           feedbackMsg = "Could not connect to the server. Please check your connection.";
         }
       }
@@ -163,15 +175,28 @@ function PracticeContent() {
         cer: cerValue,
         isCorrect,
         feedbackMessage: feedbackMsg,
+        feedbackTier: tier,
         timestamp: new Date(),
         audioBlob: blob,
       };
 
+      const feedbackType: FeedbackType = tier === "excellent"
+        ? "success"
+        : tier === "almost_there"
+        ? "almostThere"
+        : "needsImprovement";
+
+      const headerMsg = tier === "excellent"
+        ? (t.feedbackCorrect || "Excellent!")
+        : tier === "almost_there"
+        ? (t.feedbackAlmostThere || "Almost there")
+        : (t.feedbackNeedsImprovement || "Needs improvement");
+
       setFeedback({
         isVisible: true,
         attempt,
-        message: isCorrect ? t.feedbackCorrect : t.feedbackTryAgain,
-        type: isCorrect ? "success" : "tryAgain",
+        message: headerMsg,
+        type: feedbackType,
       });
     },
     [currentWord, t]
