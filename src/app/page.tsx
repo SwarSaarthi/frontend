@@ -360,6 +360,7 @@ function ListenDemo({ desc }: { desc: string }) {
 }
 
 function SpeakDemo({ desc }: { desc: string }) {
+  const { lang } = useLanguage();
   const [phase, setPhase] = useState<"recording" | "checking" | "matched">(
     "recording",
   );
@@ -424,15 +425,25 @@ function SpeakDemo({ desc }: { desc: string }) {
 
       <div className="mt-3 h-5 text-sm font-semibold">
         {phase === "recording" && (
-          <span className="text-zinc-500">Listening for your voice…</span>
+          <span className="text-zinc-500">
+            {lang === "hi"
+              ? "आपकी आवाज़ सुन रहे हैं…"
+              : "Listening for your voice…"}
+          </span>
         )}
         {phase === "checking" && (
           <span className="text-zinc-500">
-            Comparing to native pronunciation…
+            {lang === "hi"
+              ? "मूल उच्चारण से तुलना की जा रही है…"
+              : "Comparing to native pronunciation…"}
           </span>
         )}
         {phase === "matched" && (
-          <span className="text-[#3f6f5c]">Nicely said — 91% match</span>
+          <span className="text-[#3f6f5c]">
+            {lang === "hi"
+              ? "शानदार उच्चारण - 91% सटीक"
+              : "Nicely said - 91% match"}
+          </span>
         )}
       </div>
       <p className="mt-2 text-sm text-zinc-700">{desc}</p>
@@ -451,6 +462,7 @@ const ACCURACY_TREND = [
 ];
 
 function ImproveDemo({ desc }: { desc: string }) {
+  const { lang } = useLanguage();
   const target = ACCURACY_TREND[ACCURACY_TREND.length - 1].score;
   const [count, setCount] = useState(ACCURACY_TREND[0].score);
 
@@ -490,7 +502,9 @@ function ImproveDemo({ desc }: { desc: string }) {
       </div>
       <div className="-mt-1 flex items-baseline justify-center gap-1.5">
         <span className="text-2xl font-black text-[#b8862a]">{count}%</span>
-        <span className="text-xs text-zinc-500">accuracy this week</span>
+        <span className="text-xs text-zinc-500">
+          {lang === "hi" ? "इस सप्ताह सटीकता" : "accuracy this week"}
+        </span>
       </div>
       <p className="mt-2 text-sm text-zinc-700">{desc}</p>
     </div>
@@ -973,7 +987,7 @@ export default function Home() {
                 <Reveal key={step.n} delay={index * 70}>
                   <TiltCard maxTilt={8}>
                     <div
-                      className={`glass-card relative h-full overflow-hidden rounded-2xl bg-linear-to-br p-7 ${step.tint}`}
+                      className={`glass-card relative h-48 overflow-hidden rounded-2xl bg-linear-to-br p-7 ${step.tint}`}
                       style={{
                         outline: on ? `2px solid ${step.accent}` : undefined,
                         outlineOffset: 2,
