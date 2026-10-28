@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { speakHindi } from "@/lib/audioRecorder";
 import { useLanguage } from "@/components/LanguageProvider";
+import TtsSpeedControl, { useTtsSpeed } from "@/components/TtsSpeedControl";
 import TiltCard from "@/components/TiltCard";
 
 const SAMPLE_WORDS = [
@@ -47,14 +48,15 @@ const SAMPLE_WORDS = [
 export default function HomeWordTeaser() {
   const [activeWord, setActiveWord] = useState(SAMPLE_WORDS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useTtsSpeed();
   const { lang } = useLanguage();
 
   const isHindi = lang === "hi";
 
-  const handlePlayAudio = async (wordText: string) => {
+  const handlePlayAudio = async (wordText: string, playSpeed?: number) => {
     setIsPlaying(true);
     try {
-      await speakHindi(wordText, 0.75);
+      await speakHindi(wordText, playSpeed ?? speed);
     } catch {
       // Gracefully handle browser speech fallback
     } finally {
@@ -75,6 +77,16 @@ export default function HomeWordTeaser() {
             ? "स्पष्ट हिंदी उच्चारण सुनने के लिए नीचे किसी भी शब्द कार्ड पर क्लिक करें"
             : "Click any word card below to hear clear, gentle Hindi pronunciation"}
         </p>
+        <div className="flex justify-center mt-4">
+          <TtsSpeedControl
+            speed={speed}
+            onSpeedSelect={(newSpeed) => {
+              setSpeed(newSpeed);
+              handlePlayAudio(activeWord.text, newSpeed);
+            }}
+            size="sm"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

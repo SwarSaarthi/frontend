@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { authApi, setAuthToken } from "@/lib/api";
+import { authApi } from "@/lib/api";
 import { useLanguage } from "@/components/LanguageProvider";
+import { useAuth } from "@/components/AuthProvider";
 import AuthGuard from "@/components/AuthGuard";
 
 export default function SignupPage() {
@@ -19,6 +20,7 @@ export default function SignupPage() {
 function SignupForm() {
   const router = useRouter();
   const { lang } = useLanguage();
+  const { login } = useAuth();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,7 +57,7 @@ function SignupForm() {
         password,
         full_name: fullName,
       });
-      setAuthToken(res.access_token);
+      login(res.access_token, res.user);
       router.push("/profile");
     } catch (err: any) {
       setError(err.message || "Failed to create account. Please try again.");

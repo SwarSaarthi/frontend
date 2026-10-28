@@ -3,6 +3,7 @@
 import { memo, useCallback, useRef, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { speakHindi } from "@/lib/audioRecorder";
+import TtsSpeedControl, { useTtsSpeed } from "@/components/TtsSpeedControl";
 import type { FeedbackState } from "@/types";
 
 interface FeedbackPanelProps {
@@ -75,18 +76,30 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 // ── Playback Button ──────────────────────────────────────────────
-function PlaybackButton({ label, onClick, isPlaying }: { label: string; onClick: () => void; isPlaying: boolean }) {
+function PlaybackButton({
+  label,
+  onClick,
+  isPlaying,
+  className = "",
+}: {
+  label: string;
+  onClick: () => void;
+  isPlaying: boolean;
+  className?: string;
+}) {
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+      className={`inline-flex items-center justify-center gap-1.5 min-w-19.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 shrink-0 ${
         isPlaying
-          ? "bg-blue-50 border-blue-200 text-blue-700"
-          : "bg-white border-stone-200 text-zinc-600 hover:border-stone-300 hover:bg-stone-50"
-      }`}
+          ? "bg-blue-50 border-blue-200 text-blue-700 shadow-2xs"
+          : "bg-white border-stone-200 text-zinc-600 hover:border-stone-300 hover:bg-stone-50 active:scale-95"
+      } ${className}`}
       aria-label={label}
     >
-      <SpeakerIcon className="w-3.5 h-3.5" />
+      <SpeakerIcon
+        className={`w-3.5 h-3.5 shrink-0 ${isPlaying ? "animate-pulse text-blue-600" : ""}`}
+      />
       <span>{isPlaying ? "Playing…" : "Play"}</span>
     </button>
   );
@@ -94,7 +107,8 @@ function PlaybackButton({ label, onClick, isPlaying }: { label: string; onClick:
 
 // ── Main Component ───────────────────────────────────────────────
 function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: FeedbackPanelProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const [speed, setSpeed] = useTtsSpeed();
   const [playingUser, setPlayingUser] = useState(false);
   const [playingCorrect, setPlayingCorrect] = useState(false);
   const userAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -128,16 +142,28 @@ function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: 
   }, [feedback.attempt?.audioBlob]);
 
   // Play correct pronunciation via TTS
-  const handlePlayCorrect = useCallback(async () => {
-    setPlayingCorrect(true);
-    try {
-      await speakHindi(expectedWord, 0.8);
-    } catch {
-      // TTS not supported or failed
-    } finally {
-      setPlayingCorrect(false);
-    }
-  }, [expectedWord]);
+  const handlePlayCorrect = useCallback(
+    async (playbackSpeed?: number) => {
+      const rate = playbackSpeed ?? speed;
+      setPlayingCorrect(true);
+      try {
+        await speakHindi(expectedWord, rate);
+      } catch {
+        // TTS not supported or failed
+      } finally {
+        setPlayingCorrect(false);
+      }
+    },
+    [expectedWord, speed]
+  );
+
+  const handleSpeedSelect = useCallback(
+    (newSpeed: number) => {
+      setSpeed(newSpeed);
+      handlePlayCorrect(newSpeed);
+    },
+    [setSpeed, handlePlayCorrect]
+  );
 
   if (!feedback.isVisible) return null;
 
@@ -213,10 +239,20 @@ function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: 
           {/* Pronunciation Comparison */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
             {/* User's pronunciation */}
-            <div className="rounded-xl border border-stone-200 bg-white p-4">
+            <div className="rounded-xl border border-stone-200 bg-white p-4 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-[10px] tracking-widest uppercase text-zinc-400 font-semibold">
                   {t.yourPronunciation || "You Said"}
+                </p>
+                {feedback.attempt.audioBlob && (
+                  <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
+                    {lang === "hi" ? "आपकी आवाज़" : "Your Audio"}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between gap-2 mt-1">
+                <p className="text-xl sm:text-2xl font-hindi font-bold text-zinc-800 leading-relaxed break-all">
+                  {predictionText}
                 </p>
                 {feedback.attempt.audioBlob && (
                   <PlaybackButton
@@ -226,28 +262,35 @@ function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: 
                   />
                 )}
               </div>
-              <p className="text-lg font-hindi font-semibold text-zinc-800 leading-relaxed break-all">
-                {predictionText}
-              </p>
             </div>
 
             {/* Correct pronunciation */}
-            <div className={`rounded-xl border p-4 ${
-              isSuccess ? "border-emerald-200 bg-emerald-50/50" : "border-blue-200 bg-blue-50/40"
-            }`}>
-              <div className="flex items-center justify-between mb-2">
+            <div
+              className={`rounded-xl border p-4 flex flex-col justify-between ${
+                isSuccess ? "border-emerald-200 bg-emerald-50/50" : "border-blue-200 bg-blue-50/40"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2 mb-2">
                 <p className="text-[10px] tracking-widest uppercase text-zinc-400 font-semibold">
                   {t.expectedPronunciation || "Correct"}
                 </p>
+                <TtsSpeedControl
+                  speed={speed}
+                  onSpeedSelect={handleSpeedSelect}
+                  size="sm"
+                  showLabel={false}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2 mt-1">
+                <p className="text-xl sm:text-2xl font-hindi font-bold text-zinc-800 leading-relaxed">
+                  {expectedWord}
+                </p>
                 <PlaybackButton
                   label="Listen to correct pronunciation"
-                  onClick={handlePlayCorrect}
+                  onClick={() => handlePlayCorrect(speed)}
                   isPlaying={playingCorrect}
                 />
               </div>
-              <p className="text-lg font-hindi font-semibold text-zinc-800 leading-relaxed">
-                {expectedWord}
-              </p>
             </div>
           </div>
 

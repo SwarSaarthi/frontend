@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { WordProgress } from "@/types";
 
@@ -25,10 +26,23 @@ const WordRow = memo(function WordRow({
     wp.totalAttempts > 0 ? Math.round((wp.correctAttempts / wp.totalAttempts) * 100) : 0;
 
   return (
-    <div className="card p-4 flex items-center gap-4">
+    <div
+      onClick={onPractice}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onPractice();
+        }
+      }}
+      className="card p-4 flex items-center gap-4 hover:border-primary/50 transition-all cursor-pointer group hover:shadow-xs active:scale-[0.99]"
+    >
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2">
-          <span className="text-lg font-hindi font-bold text-ink">{wp.word.word}</span>
+          <span className="text-lg font-hindi font-bold text-ink group-hover:text-primary transition-colors">
+            {wp.word.word}
+          </span>
           <span className="text-xs text-ink-faint italic">{wp.word.transliteration}</span>
         </div>
         <div className="flex items-center gap-2 mt-1 text-xs text-ink-faint">
@@ -48,10 +62,14 @@ const WordRow = memo(function WordRow({
         </div>
       </div>
       <button
-        onClick={onPractice}
-        className="shrink-0 px-4 py-2 rounded-full text-xs font-medium bg-white border border-line text-ink hover:border-stone-strong hover:bg-mist transition-colors duration-150"
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onPractice();
+        }}
+        className="shrink-0 px-4 py-2 rounded-full text-xs font-semibold bg-white border border-line text-ink group-hover:border-primary group-hover:text-primary hover:bg-mist transition-all duration-150 active:scale-95 shadow-2xs"
       >
-        {practiceLabel}
+        {practiceLabel} →
       </button>
     </div>
   );
@@ -59,11 +77,14 @@ const WordRow = memo(function WordRow({
 
 function DifficultWords({ words }: DifficultWordsProps) {
   const { t } = useLanguage();
+  const router = useRouter();
 
-  const handlePractice = useCallback(() => {
-    // isolated navigation — no inline arrow per row to avoid new fn per render in parent
-    window.location.href = `/practice`;
-  }, []);
+  const handlePractice = useCallback(
+    (wordId: string, wordText: string) => {
+      router.push(`/practice?wordId=${encodeURIComponent(wordId)}&word=${encodeURIComponent(wordText)}`);
+    },
+    [router]
+  );
 
   if (words.length === 0) {
     return (
@@ -71,7 +92,7 @@ function DifficultWords({ words }: DifficultWordsProps) {
         <div className="w-8 h-8 rounded-full border border-line bg-mist flex items-center justify-center mx-auto mb-3">
           <svg className="w-4 h-4 text-ink-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
             <path d="M12 8v5M12 16h.01" strokeLinecap="round" />
-            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="9" r="9" />
           </svg>
         </div>
         <p className="text-sm text-ink-soft">{t.noData}</p>
@@ -88,7 +109,7 @@ function DifficultWords({ words }: DifficultWordsProps) {
           attemptsLabel={t.attempts}
           bestLabel={t.bestScore}
           practiceLabel={t.practiceAgain}
-          onPractice={handlePractice}
+          onPractice={() => handlePractice(wp.word.id, wp.word.word)}
         />
       ))}
     </div>

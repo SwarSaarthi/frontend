@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo, useCallback, memo, useEffect } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
-import { getAuthToken, removeAuthToken } from "@/lib/api";
+import { useAuth } from "@/components/AuthProvider";
 import Image from "next/image";
 
 function NavbarInner() {
@@ -12,23 +12,7 @@ function NavbarInner() {
   const { t, toggleLang, lang } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // Re-check token on every route change so the navbar updates after login/logout
-  useEffect(() => {
-    setIsLoggedIn(!!getAuthToken());
-  }, [pathname]);
-
-  // Listen for storage events (login/logout in other tabs)
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "swarsaarthi_token") {
-        setIsLoggedIn(!!e.newValue);
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  const { isLoggedIn, logout } = useAuth();
 
   // navLinks is memoised — without this, a new array on every parent re-render
   // would cause the .map list to reconcile as all-new nodes.
@@ -54,11 +38,10 @@ function NavbarInner() {
   }, [toggleLang]);
 
   const handleLogout = useCallback(() => {
-    removeAuthToken();
-    setIsLoggedIn(false);
+    logout();
     setIsMobileMenuOpen(false);
     router.push("/");
-  }, [router]);
+  }, [logout, router]);
 
   return (
     <nav className="sticky top-0 z-50 bg-paper/90 backdrop-blur-[6px] border-b border-line">

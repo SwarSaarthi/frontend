@@ -2,16 +2,16 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { getAuthToken } from "@/lib/api";
+import { useAuth } from "@/components/AuthProvider";
 
 /**
  * AuthGuard — route-protection wrapper.
  *
- * mode="protected"  → page needs a token. Redirect to /login if missing.
+ * mode="protected"  → page needs a verified session. Redirect to /login if missing/invalid.
  * mode="guest"      → page is for unauthenticated users only (login/signup).
- *                     Redirect to /profile if token exists.
+ *                     Redirect to /profile if valid session exists.
  *
- * While the check is running, a subtle loading skeleton is shown
+ * While the verification check is running, a subtle loading skeleton is shown
  * to prevent the underlying page from flashing.
  */
 
@@ -23,21 +23,26 @@ interface AuthGuardProps {
 export default function AuthGuard({ children, mode }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { isLoggedIn, isLoading } = useAuth();
   const [status, setStatus] = useState<"loading" | "allowed" | "redirecting">("loading");
 
   useEffect(() => {
-    const token = getAuthToken();
+    // Wait until the initial auth check finishes
+    if (isLoading) {
+      setStatus("loading");
+      return;
+    }
 
-    if (mode === "protected" && !token) {
+    if (mode === "protected" && !isLoggedIn) {
       setStatus("redirecting");
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
-    } else if (mode === "guest" && token) {
+    } else if (mode === "guest" && isLoggedIn) {
       setStatus("redirecting");
       router.replace("/profile");
     } else {
       setStatus("allowed");
     }
-  }, [mode, router, pathname]);
+  }, [mode, router, pathname, isLoggedIn, isLoading]);
 
   if (status === "loading" || status === "redirecting") {
     return (

@@ -17,12 +17,14 @@ export function getAuthToken(): string | null {
 export function setAuthToken(token: string): void {
   if (typeof window !== "undefined") {
     localStorage.setItem("swarsaarthi_token", token);
+    window.dispatchEvent(new Event("swarsaarthi_auth_changed"));
   }
 }
 
 export function removeAuthToken(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem("swarsaarthi_token");
+    window.dispatchEvent(new Event("swarsaarthi_auth_changed"));
   }
 }
 
@@ -44,6 +46,12 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      removeAuthToken();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("swarsaarthi_unauthorized"));
+      }
+    }
     let errorDetail = "An unexpected error occurred.";
     try {
       const errJson = await res.json();
@@ -73,6 +81,12 @@ async function apiFetchFormData<T>(endpoint: string, formData: FormData): Promis
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      removeAuthToken();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("swarsaarthi_unauthorized"));
+      }
+    }
     let errorDetail = "An unexpected error occurred.";
     try {
       const errJson = await res.json();
@@ -105,6 +119,7 @@ export interface WordItem {
   text_hi: string;
   transliteration: string;
   meaning_en: string;
+  meaning_hi?: string;
   category: string;
   difficulty: "basic" | "intermediate" | "advanced";
   audio_url?: string | null;

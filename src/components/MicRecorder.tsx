@@ -11,9 +11,11 @@ interface MicRecorderProps {
 }
 
 function MicRecorderInner({ onRecordingComplete, disabled = false }: MicRecorderProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(0);
+  const [hasDetectedSound, setHasDetectedSound] = useState(false);
   const recorderRef = useRef<AudioRecorder | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -27,12 +29,21 @@ function MicRecorderInner({ onRecordingComplete, disabled = false }: MicRecorder
   const startRecording = useCallback(async () => {
     if (disabled) return;
     setDuration(0);
+    setVolume(0);
+    setHasDetectedSound(false);
     setRecordingState("recording");
+
     const recorder = new AudioRecorder({
       onStatusChange: (status) => {
         if (status === "error") {
           setRecordingState("idle");
           if (timerRef.current) clearInterval(timerRef.current);
+        }
+      },
+      onVolumeChange: (vol) => {
+        setVolume(vol);
+        if (vol > 0.04) {
+          setHasDetectedSound(true);
         }
       },
       onDataAvailable: (blob) => {
@@ -73,26 +84,26 @@ function MicRecorderInner({ onRecordingComplete, disabled = false }: MicRecorder
       <div className="relative">
         {isRecording && (
           <>
+            <span className="absolute inset-0 rounded-full border border-clay/30 animate-ping opacity-30" />
             <span className="absolute inset-0 rounded-full border border-clay/20" style={{ animation: "pulse-soft 1.4s ease-out infinite" }} />
-            <span className="absolute inset-0 rounded-full border border-clay/10" style={{ animation: "pulse-soft 1.4s ease-out 0.35s infinite" }} />
           </>
         )}
         <button
           onClick={handleMicClick}
           disabled={disabled || isProcessing}
-          className={`relative z-10 w-18 h-18 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-colors duration-150 border ${
+          className={`relative z-10 w-18 h-18 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all duration-150 border shadow-xs ${
             isRecording
-              ? "bg-error text-white border-error"
+              ? "bg-error text-white border-error scale-105"
               : isProcessing
                 ? "bg-mist text-ink-soft border-line cursor-wait"
                 : disabled
                   ? "bg-mist text-ink-faint border-line cursor-not-allowed"
-                  : "bg-ink text-white border-ink hover:bg-black"
+                  : "bg-ink text-white border-ink hover:bg-black hover:scale-[1.02] active:scale-95"
           }`}
           aria-label={isRecording ? t.stopRecording : isProcessing ? t.processing : t.tapToRecord}
         >
           {isRecording ? (
-            <span className="w-4 h-4 bg-white rounded-sm" />
+            <span className="w-5 h-5 bg-white rounded-xs" />
           ) : isProcessing ? (
             <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden>
               <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
@@ -107,11 +118,40 @@ function MicRecorderInner({ onRecordingComplete, disabled = false }: MicRecorder
         </button>
       </div>
 
+      {/* Live Audio Visualizer Wave */}
+      {isRecording && (
+        <div className="flex items-center justify-center gap-1 h-6 px-3 py-1 rounded-full bg-stone-100 border border-stone-200">
+          {[0.5, 0.9, 1.4, 0.7, 1.2, 0.8, 1.5, 0.6, 1.0].map((scale, i) => (
+            <span
+              key={i}
+              className={`w-1 rounded-full transition-all duration-75 ${
+                volume > 0.03 ? "bg-primary" : "bg-stone-300"
+              }`}
+              style={{
+                height: `${Math.max(4, Math.min(20, (volume * 45 * scale) + 4))}px`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       <div className="text-center">
-        <p className={`text-xs font-medium tracking-wide ${isRecording ? "text-error" : "text-ink-soft"}`}>
+        <p className={`text-xs font-semibold tracking-wide ${isRecording ? "text-error" : "text-ink-soft"}`}>
           {isRecording ? t.recording : isProcessing ? t.processing : t.tapToRecord}
         </p>
-        {isRecording && <p className="text-xs tabular-nums text-ink-faint mt-1">{formatDuration(duration)}</p>}
+
+        {isRecording && (
+          <div className="flex flex-col items-center gap-1 mt-1">
+            <p className="text-xs tabular-nums text-ink-faint">{formatDuration(duration)}</p>
+            {duration >= 2 && !hasDetectedSound && (
+              <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full animate-pulse mt-0.5">
+                {lang === "hi"
+                  ? "⚠️ आवाज़ नहीं आ रही — कृपया माइक की जाँच करें"
+                  : "⚠️ No sound detected — please check your mic"}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
 import WordCard from "@/components/WordCard";
 import FeedbackPanel from "@/components/FeedbackPanel";
@@ -21,12 +22,26 @@ type DifficultyFilter = "all" | "basic" | "intermediate" | "advanced";
 export default function PracticePage() {
   return (
     <AuthGuard mode="protected">
-      <PracticeContent />
+      <Suspense
+        fallback={
+          <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-10 px-4 sm:px-6 flex flex-col items-center justify-center gap-3">
+            <div className="w-8 h-8 border-2 border-stone-300 border-t-zinc-900 rounded-full animate-spin" />
+            <span className="text-xs text-zinc-500">Loading practice…</span>
+          </div>
+        }
+      >
+        <PracticeContent />
+      </Suspense>
     </AuthGuard>
   );
 }
 
 function PracticeContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const targetWordId = searchParams.get("wordId");
+  const targetWordText = searchParams.get("word");
+
   const { t, lang } = useLanguage();
   const [difficulty, setDifficulty] = useState<DifficultyFilter>("all");
   const [words, setWords] = useState<Word[]>(defaultMockWords);
@@ -39,38 +54,105 @@ function PracticeContent() {
     type: "neutral",
   });
 
-  // Fetch words from backend API based on difficulty filter
+  // Fetch words from backend API based on difficulty filter, prioritizing focus word if provided
   useEffect(() => {
     let isMounted = true;
     async function fetchWords() {
       setIsLoadingWords(true);
       try {
+        let targetWordObj: Word | null = null;
+
+        // 1. If target focus word was specified via query parameters
+        if (targetWordId || targetWordText) {
+          // Attempt fetch from backend by ID
+          if (targetWordId) {
+            try {
+              const item = await wordsApi.getById(targetWordId);
+              if (item && item.id) {
+                targetWordObj = {
+                  id: item.id,
+                  word: item.text_hi,
+                  transliteration: item.transliteration || "",
+                  meaningEn: item.meaning_en || "",
+                  meaningHi: item.meaning_hi || item.text_hi,
+                  difficulty: item.difficulty === "basic" ? 1 : item.difficulty === "intermediate" ? 2 : 3,
+                  category: item.category || "Focus",
+                  audioUrl: item.audio_url || undefined,
+                };
+              }
+            } catch {
+              // Word ID might be from mock data or backend offline
+            }
+          }
+
+          // Search in mock data if not found in DB
+          if (!targetWordObj) {
+            const foundMock = defaultMockWords.find(
+              (w) => (targetWordId && w.id === targetWordId) || (targetWordText && w.word === targetWordText)
+            );
+            if (foundMock) {
+              targetWordObj = { ...foundMock };
+            }
+          }
+
+          // If still not found but word text is provided, build a Word entry
+          if (!targetWordObj && targetWordText) {
+            targetWordObj = {
+              id: targetWordId || "focus-word",
+              word: targetWordText,
+              transliteration: "",
+              meaningEn: "",
+              meaningHi: targetWordText,
+              difficulty: 2,
+              category: "Focus Word",
+            };
+          }
+        }
+
         const diffParam = difficulty === "all" ? undefined : difficulty;
-        const apiWords = await wordsApi.getRandom(30, diffParam);
-        if (isMounted && apiWords && apiWords.length > 0) {
-          const mapped: Word[] = apiWords.map((w: WordItem) => ({
-            id: w.id,
-            word: w.text_hi,
-            transliteration: w.transliteration,
-            meaningEn: w.meaning_en,
-            meaningHi: w.text_hi,
-            difficulty: w.difficulty === "basic" ? 1 : w.difficulty === "intermediate" ? 2 : 3,
-            category: w.category,
-            audioUrl: w.audio_url || undefined,
-          }));
-          setWords(mapped);
+        let queue: Word[] = [];
+
+        try {
+          const apiWords = await wordsApi.getRandom(30, diffParam);
+          if (apiWords && apiWords.length > 0) {
+            queue = apiWords.map((w: WordItem) => ({
+              id: w.id,
+              word: w.text_hi,
+              transliteration: w.transliteration,
+              meaningEn: w.meaning_en,
+              meaningHi: w.meaning_hi || w.text_hi,
+              difficulty: w.difficulty === "basic" ? 1 : w.difficulty === "intermediate" ? 2 : 3,
+              category: w.category,
+              audioUrl: w.audio_url || undefined,
+            }));
+          }
+        } catch {
+          // Fallback to local dataset filter
+          if (difficulty === "all") {
+            queue = [...defaultMockWords];
+          } else {
+            const mappedDiff = difficulty === "basic" ? 1 : difficulty === "intermediate" ? 2 : 3;
+            const filtered = defaultMockWords.filter((w) => w.difficulty === mappedDiff);
+            queue = filtered.length > 0 ? filtered : [...defaultMockWords];
+          }
+        }
+
+        if (isMounted) {
+          if (targetWordObj) {
+            // Deduplicate: remove target word if it also appeared in random queue
+            const filteredQueue = queue.filter(
+              (w) => w.id !== targetWordObj!.id && w.word !== targetWordObj!.word
+            );
+            setWords([targetWordObj, ...filteredQueue]);
+          } else {
+            setWords(queue.length > 0 ? queue : defaultMockWords);
+          }
           setCurrentIndex(0);
         }
       } catch (err) {
         // Fallback to local dataset filter
         if (isMounted) {
-          if (difficulty === "all") {
-            setWords(defaultMockWords);
-          } else {
-            const mappedDiff = difficulty === "basic" ? 1 : difficulty === "intermediate" ? 2 : 3;
-            const filtered = defaultMockWords.filter((w) => w.difficulty === mappedDiff);
-            setWords(filtered.length > 0 ? filtered : defaultMockWords);
-          }
+          setWords(defaultMockWords);
           setCurrentIndex(0);
         }
       } finally {
@@ -82,7 +164,7 @@ function PracticeContent() {
     return () => {
       isMounted = false;
     };
-  }, [difficulty]);
+  }, [difficulty, targetWordId, targetWordText]);
 
   const currentWord = useMemo(() => {
     return words[currentIndex] || defaultMockWords[0];
@@ -127,42 +209,59 @@ function PracticeContent() {
             ? "Good attempt! Listen carefully to the reference audio and try again."
             : "The pronunciation needs improvement. Listen to the reference audio carefully and try speaking slowly.";
         }
-      } catch (err) {
-        // If ASR fails, try the old practice/submit endpoint as fallback
-        try {
-          if (token && currentWord.id) {
-            const fallback = await practiceApi.submit({
-              word_id: currentWord.id,
-              recognized_text: currentWord.word,
-            });
-            recognized = fallback.recognized_text;
-            prediction = fallback.recognized_text;
-            score = Math.round(fallback.accuracy_score);
-            isCorrect = fallback.is_correct;
-            cerValue = isCorrect ? 0.1 : 0.4;
-            tier = isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement";
-            feedbackMsg = isCorrect
-              ? "Great pronunciation!"
-              : score >= 50
-              ? "Keep practicing — try to match the correct pronunciation."
-              : "The pronunciation needs improvement. Try listening to the audio again.";
-          } else {
-            score = Math.floor(Math.random() * 35) + 65;
-            isCorrect = score >= 80;
-            recognized = currentWord.word;
-            prediction = recognized;
-            cerValue = 0.3;
-            tier = isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement";
-            feedbackMsg = "Could not connect to ASR service.";
-          }
-        } catch {
+      } catch (err: any) {
+        const isAuthError =
+          err?.message?.toLowerCase().includes("unauthorized") ||
+          err?.message?.toLowerCase().includes("invalid or expired token");
+
+        if (isAuthError) {
           score = 0;
           isCorrect = false;
           recognized = "—";
           prediction = "—";
           cerValue = 1.0;
           tier = "needs_improvement";
-          feedbackMsg = "Could not connect to the server. Please check your connection.";
+          feedbackMsg =
+            lang === "hi"
+              ? "आपका सत्र समाप्त हो गया है। कृपया पुनः लॉग इन करें।"
+              : "Your session has expired. Please log in again.";
+        } else {
+          // If ASR fails due to model or audio format, try the practice/submit endpoint as fallback
+          try {
+            if (token && currentWord.id) {
+              const fallback = await practiceApi.submit({
+                word_id: currentWord.id,
+                recognized_text: currentWord.word,
+              });
+              recognized = fallback.recognized_text;
+              prediction = fallback.recognized_text;
+              score = Math.round(fallback.accuracy_score);
+              isCorrect = fallback.is_correct;
+              cerValue = isCorrect ? 0.1 : 0.4;
+              tier = isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement";
+              feedbackMsg = isCorrect
+                ? "Great pronunciation!"
+                : score >= 50
+                ? "Keep practicing — try to match the correct pronunciation."
+                : "The pronunciation needs improvement. Try listening to the audio again.";
+            } else {
+              score = Math.floor(Math.random() * 35) + 65;
+              isCorrect = score >= 80;
+              recognized = currentWord.word;
+              prediction = recognized;
+              cerValue = 0.3;
+              tier = isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement";
+              feedbackMsg = "Could not connect to ASR service.";
+            }
+          } catch {
+            score = 0;
+            isCorrect = false;
+            recognized = "—";
+            prediction = "—";
+            cerValue = 1.0;
+            tier = "needs_improvement";
+            feedbackMsg = "Could not connect to the server. Please check your connection.";
+          }
         }
       }
 
@@ -231,6 +330,16 @@ function PracticeContent() {
     setCurrentIndex((prev) => (prev - 1 + totalWords) % totalWords);
   }, [t, totalWords]);
 
+  const handleDifficultyChange = useCallback(
+    (newDiff: DifficultyFilter) => {
+      setDifficulty(newDiff);
+      if (targetWordId || targetWordText) {
+        router.replace("/practice");
+      }
+    },
+    [router, targetWordId, targetWordText]
+  );
+
   return (
     <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-10 px-4 sm:px-6">
       <div className="max-w-xl mx-auto">
@@ -242,6 +351,29 @@ function PracticeContent() {
             {currentIndex + 1} / {totalWords}
           </span>
         </div>
+
+        {/* Focus Word from Profile Banner */}
+        {(targetWordId || targetWordText) && words[0] && currentIndex === 0 && (
+          <div className="flex items-center justify-between gap-3 px-4 py-2.5 mb-4 rounded-2xl bg-amber-50/90 border border-amber-200/70 text-amber-900 shadow-2xs animate-fade-in">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-base">🎯</span>
+              <div className="text-xs">
+                <span className="text-amber-800/90">
+                  {lang === "hi" ? "ध्यान देने योग्य शब्द (प्रोफ़ाइल से):" : "Word to Focus On (from profile):"}{" "}
+                </span>
+                <span className="font-hindi font-bold text-sm text-amber-950 ml-1">
+                  {targetWordText || words[0].word}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => router.replace("/practice")}
+              className="shrink-0 text-xs font-semibold text-amber-800 hover:text-amber-950 bg-amber-100/60 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors"
+            >
+              {lang === "hi" ? "मिश्रित शब्द देखें ✕" : "View all ✕"}
+            </button>
+          </div>
+        )}
 
         {/* Difficulty Selector Tabs */}
         <div className="flex items-center gap-1.5 p-1 bg-stone-100/80 border border-stone-200/80 rounded-2xl mb-6 shadow-xs">
@@ -255,7 +387,7 @@ function PracticeContent() {
             return (
               <button
                 key={tab.key}
-                onClick={() => setDifficulty(tab.key as DifficultyFilter)}
+                onClick={() => handleDifficultyChange(tab.key as DifficultyFilter)}
                 className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-medium transition-all ${
                   active
                     ? "bg-white text-zinc-900 shadow-sm font-semibold border border-stone-200/50"

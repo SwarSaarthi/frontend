@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { authApi, setAuthToken } from "@/lib/api";
+import { authApi } from "@/lib/api";
 import { useLanguage } from "@/components/LanguageProvider";
+import { useAuth } from "@/components/AuthProvider";
 import AuthGuard from "@/components/AuthGuard";
 
 export default function LoginPage() {
@@ -19,6 +20,7 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const { lang } = useLanguage();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +34,7 @@ function LoginForm() {
 
     try {
       const res = await authApi.login({ email, password });
-      setAuthToken(res.access_token);
+      login(res.access_token, res.user);
       router.push("/profile");
     } catch (err: any) {
       setError(

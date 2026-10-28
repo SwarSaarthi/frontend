@@ -16,6 +16,7 @@ import {
   type StreakDay,
   type DifficultyProgress,
 } from "@/lib/api";
+import { useAuth } from "@/components/AuthProvider";
 import type { WordProgress } from "@/types";
 import AuthGuard from "@/components/AuthGuard";
 
@@ -76,6 +77,7 @@ export default function ProfilePage() {
 function ProfileContent() {
   const router = useRouter();
   const { t, lang } = useLanguage();
+  const { logout } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [profileSummary, setProfileSummary] = useState<ProfileSummary | null>(
     null,
@@ -132,7 +134,7 @@ function ProfileContent() {
   }, []);
 
   const handleLogout = () => {
-    authApi.logout();
+    logout();
     setIsLoggedIn(false);
     setProfileSummary(null);
     router.push("/login");

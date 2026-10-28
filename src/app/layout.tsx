@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import localFont from "next/font/local";
 import { Noto_Sans_Devanagari, Plus_Jakarta_Sans } from "next/font/google";
 import { LanguageProvider } from "@/components/LanguageProvider";
+import { AuthProvider } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
@@ -77,11 +78,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
         <LanguageProvider>
-          <Navbar />
-          <main className="flex-1">
-            <PageTransition>{children}</PageTransition>
-          </main>
-          <Footer />
+          <AuthProvider>
+            <Navbar />
+            <main className="flex-1">
+              <PageTransition>{children}</PageTransition>
+            </main>
+            <Footer />
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>
