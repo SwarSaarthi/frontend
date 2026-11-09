@@ -144,6 +144,8 @@ export interface PracticeSubmitResult {
   };
   needs_focus: boolean;
   streak: number;
+  gemini_suggestion?: string;
+  feedback_language?: "en" | "hi";
 }
 
 export interface AsrPredictResult {
@@ -163,6 +165,8 @@ export interface AsrPredictResult {
   };
   needs_focus: boolean;
   streak: number;
+  gemini_suggestion?: string;
+  feedback_language?: "en" | "hi";
 }
 
 export interface ProfileSummary {
@@ -282,10 +286,22 @@ export const profileApi = {
 };
 
 export const asrApi = {
-  predict: (audio: Blob, wordId: string) => {
+  predict: (audio: Blob, wordId: string, feedbackLanguage: "en" | "hi" = "en") => {
     const formData = new FormData();
     formData.append("audio", audio, "recording.webm");
     formData.append("word_id", wordId);
+    formData.append("feedback_language", feedbackLanguage);
     return apiFetchFormData<AsrPredictResult>("/api/asr/predict", formData);
+  },
+};
+
+export const ttsApi = {
+  getAudioUrl: (text: string, lang = "hi", speed = 0.85) => {
+    const params = new URLSearchParams({
+      text,
+      lang,
+      speed: String(speed),
+    });
+    return `${API_BASE_URL}/api/tts?${params.toString()}`;
   },
 };

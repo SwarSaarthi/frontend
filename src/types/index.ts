@@ -48,6 +48,10 @@ export interface PronunciationAttempt {
   feedbackMessage: string;
   /** Categorized feedback tier */
   feedbackTier?: "excellent" | "almost_there" | "needs_improvement";
+  /** Detailed Gemini AI articulation coaching suggestion */
+  geminiSuggestion?: string;
+  /** Language used for the feedback ('en' or 'hi') */
+  feedbackLanguage?: "en" | "hi";
   /** Timestamp of the attempt */
   timestamp: Date;
   /** The raw audio blob recorded by the user (for playback) */

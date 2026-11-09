@@ -1,8 +1,8 @@
 "use client";
 
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useCallback, useRef, useState, useEffect } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
-import { speakHindi } from "@/lib/audioRecorder";
+import { speakHindi, speakFeedback, stopSpeaking } from "@/lib/audioRecorder";
 import TtsSpeedControl, { useTtsSpeed } from "@/components/TtsSpeedControl";
 import type { FeedbackState } from "@/types";
 
@@ -11,6 +11,8 @@ interface FeedbackPanelProps {
   expectedWord: string;
   onTryAgain: () => void;
   onNextWord: () => void;
+  feedbackLanguage?: "en" | "hi";
+  onFeedbackLanguageChange?: (lang: "en" | "hi") => void;
 }
 
 // ── Icons ────────────────────────────────────────────────────────
@@ -106,13 +108,28 @@ function PlaybackButton({
 }
 
 // ── Main Component ───────────────────────────────────────────────
-function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: FeedbackPanelProps) {
+function FeedbackPanelInner({
+  feedback,
+  expectedWord,
+  onTryAgain,
+  onNextWord,
+  feedbackLanguage = "hi",
+  onFeedbackLanguageChange,
+}: FeedbackPanelProps) {
   const { t, lang } = useLanguage();
   const [speed, setSpeed] = useTtsSpeed();
   const [playingUser, setPlayingUser] = useState(false);
   const [playingCorrect, setPlayingCorrect] = useState(false);
+  const [playingCoach, setPlayingCoach] = useState(false);
   const userAudioRef = useRef<HTMLAudioElement | null>(null);
   const userAudioUrlRef = useRef<string | null>(null);
+
+  // Stop any ongoing speech when feedback changes or panel closes
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, [feedback.attempt]);
 
   // Play user's recorded audio
   const handlePlayUserAudio = useCallback(() => {
@@ -165,6 +182,33 @@ function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: 
     [setSpeed, handlePlayCorrect]
   );
 
+  // Play AI Speech Coach suggestion audio
+  const handlePlayCoachAudio = useCallback(async () => {
+    const coachText = feedback.attempt?.geminiSuggestion;
+    if (!coachText) return;
+
+    if (playingCoach) {
+      stopSpeaking();
+      setPlayingCoach(false);
+      return;
+    }
+
+    // Determine voice language based on chosen feedback language or Devanagari detection
+    const voiceLang =
+      feedback.attempt?.feedbackLanguage ||
+      feedbackLanguage ||
+      (/[\u0900-\u097F]{4,}/.test(coachText) ? "hi" : "en");
+
+    setPlayingCoach(true);
+    try {
+      await speakFeedback(coachText, voiceLang);
+    } catch (err) {
+      console.warn("Could not play coach audio:", err);
+    } finally {
+      setPlayingCoach(false);
+    }
+  }, [feedback.attempt?.geminiSuggestion, feedback.attempt?.feedbackLanguage, feedbackLanguage, playingCoach]);
+
   if (!feedback.isVisible) return null;
 
   const isSuccess = feedback.type === "success";
@@ -174,6 +218,7 @@ function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: 
   const score = feedback.attempt?.score ?? 0;
   const cer = feedback.attempt?.cer ?? 0;
   const predictionText = feedback.attempt?.predictionText || feedback.attempt?.recognizedText || "—";
+  const geminiSuggestion = feedback.attempt?.geminiSuggestion;
 
   const tier = feedback.attempt?.feedbackTier || (
     isSuccess ? "excellent" : isAlmostThere ? "almost_there" : "needs_improvement"
@@ -293,6 +338,91 @@ function FeedbackPanelInner({ feedback, expectedWord, onTryAgain, onNextWord }: 
               </div>
             </div>
           </div>
+
+          {/* Gemini AI Speech & Articulation Coach Suggestion */}
+          {geminiSuggestion && (
+            <div className="rounded-2xl border border-indigo-200/90 bg-linear-to-br from-indigo-50/70 via-purple-50/40 to-blue-50/50 p-4 sm:p-5 mb-5 shadow-xs">
+              <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-indigo-100/90">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-xs">
+                    ✨
+                  </span>
+                  <div>
+                    <h4 className="text-xs font-bold tracking-tight text-indigo-950 uppercase flex items-center gap-1.5 flex-wrap">
+                      <span>{lang === "hi" ? "जेमिनी एआई वाक् कोच" : "Gemini AI Speech Coach"}</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 normal-case border border-indigo-200/80">
+                        Articulation Therapy
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-indigo-700/80 font-medium">
+                      {lang === "hi"
+                        ? "जीभ, होंठ और वायु-प्रवाह की स्थिति सुधारें"
+                        : "Tongue placement, airflow & vocal tract guide"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                  {onFeedbackLanguageChange && (
+                    <div className="inline-flex items-center bg-white/90 p-0.5 rounded-full border border-indigo-200/90 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => onFeedbackLanguageChange("hi")}
+                        className={`px-2 py-0.5 text-[10px] rounded-full font-bold transition-all ${
+                          feedbackLanguage === "hi"
+                            ? "bg-indigo-600 text-white shadow-xs"
+                            : "text-zinc-600 hover:text-indigo-900"
+                        }`}
+                        title="हिंदी में सलाह प्राप्त करें"
+                      >
+                        हिन्दी
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onFeedbackLanguageChange("en")}
+                        className={`px-2 py-0.5 text-[10px] rounded-full font-bold transition-all ${
+                          feedbackLanguage === "en"
+                            ? "bg-indigo-600 text-white shadow-xs"
+                            : "text-zinc-600 hover:text-indigo-900"
+                        }`}
+                        title="Get advice in English"
+                      >
+                        EN
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Listen to Coach Guidance via Fast TTS */}
+                  <button
+                    type="button"
+                    onClick={handlePlayCoachAudio}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 shrink-0 ${
+                      playingCoach
+                        ? "bg-indigo-600 border-indigo-600 text-white shadow-xs scale-102"
+                        : "bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 active:scale-95 shadow-2xs"
+                    }`}
+                    aria-label="Listen to AI Speech Coach guidance"
+                  >
+                    <SpeakerIcon className={`w-3.5 h-3.5 shrink-0 ${playingCoach ? "animate-pulse" : ""}`} />
+                    <span>
+                      {playingCoach
+                        ? lang === "hi"
+                          ? "सुन रहे हैं…"
+                          : "Speaking…"
+                        : lang === "hi"
+                        ? "सलाह सुनें"
+                        : "Listen"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Formatted Coach Advice Content */}
+              <div className="text-xs text-zinc-800 leading-relaxed whitespace-pre-line space-y-1.5 font-normal">
+                {geminiSuggestion}
+              </div>
+            </div>
+          )}
 
           {/* Score Progress Bar */}
           <div className="mb-5">

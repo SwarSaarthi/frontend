@@ -43,6 +43,26 @@ function PracticeContent() {
   const targetWordText = searchParams.get("word");
 
   const { t, lang } = useLanguage();
+  const [feedbackLang, setFeedbackLang] = useState<"en" | "hi">("hi");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("swarsaarthi_coach_lang");
+      if (saved === "hi" || saved === "en") {
+        setFeedbackLang(saved);
+      } else if (lang === "en" || lang === "hi") {
+        setFeedbackLang(lang);
+      }
+    } catch {}
+  }, [lang]);
+
+  const handleFeedbackLangChange = useCallback((newLang: "en" | "hi") => {
+    setFeedbackLang(newLang);
+    try {
+      localStorage.setItem("swarsaarthi_coach_lang", newLang);
+    } catch {}
+  }, []);
+
   const [difficulty, setDifficulty] = useState<DifficultyFilter>("all");
   const [words, setWords] = useState<Word[]>(defaultMockWords);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -183,11 +203,12 @@ function PracticeContent() {
       let cerValue = 1.0;
       let feedbackMsg = "Unable to process your recording.";
       let tier: FeedbackTier = "needs_improvement";
+      let geminiSuggestion: string | undefined = undefined;
 
       try {
         if (token && currentWord.id) {
           // ── Primary: send audio to ASR endpoint ────────────
-          const res = await asrApi.predict(blob, currentWord.id);
+          const res = await asrApi.predict(blob, currentWord.id, feedbackLang);
           recognized = res.prediction_text;
           prediction = res.prediction_text;
           score = Math.round(res.accuracy_score);
@@ -195,6 +216,7 @@ function PracticeContent() {
           cerValue = res.cer;
           feedbackMsg = res.feedback;
           tier = res.feedback_tier || (isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement");
+          geminiSuggestion = res.gemini_suggestion;
         } else {
           // Fallback simulation for guest users
           score = Math.floor(Math.random() * 35) + 65;
@@ -208,6 +230,13 @@ function PracticeContent() {
             : score >= 50
             ? "Good attempt! Listen carefully to the reference audio and try again."
             : "The pronunciation needs improvement. Listen to the reference audio carefully and try speaking slowly.";
+          geminiSuggestion = feedbackLang === "hi"
+            ? (isCorrect
+                ? `🎯 **विश्लेषण**: बहुत बढ़िया! आपने '${currentWord.word}' का उच्चारण बहुत स्पष्ट रूप से किया।\n\n👅 **मुख की स्थिति**: आपकी जीभ और होंठों का तालमेल बिल्कुल सही रहा।\n\n💡 **अभ्यास युक्ति**: इस शब्द को दिनचर्या के वाक्यों में दोहराते रहें!`
+                : `🎯 **विश्लेषण**: सटीकता ${score}% है। लक्ष्य '${currentWord.word}' के स्थान पर '${prediction}' सुनाई दिया।\n\n👅 **जीभ की स्थिति**: जीभ को तालू के पास रखें और सांस का प्रवाह नियंत्रित रखें।\n\n💡 **अभ्यास युक्ति**: सही उच्चारण 0.5× गति पर सुनें और प्रत्येक अक्षर को अलग-अलग बोलें।`)
+            : (isCorrect
+                ? `🎯 **Analysis**: Excellent! You articulated '${currentWord.word}' with clear phoneme accuracy.\n\n👅 **Mouth Placement**: Natural airflow and precise tongue coordination were maintained.\n\n💡 **Practice Tip**: Keep repeating this word smoothly in conversational sentences!`
+                : `🎯 **Analysis**: Accuracy is ${score}%. We heard '${prediction}' for target '${currentWord.word}'.\n\n👅 **Tongue Placement**: Focus on resting the tongue tip against the upper palate and releasing air smoothly.\n\n💡 **Practice Tip**: Listen to the correct pronunciation at 0.5× speed, then say each syllable separately.`);
         }
       } catch (err: any) {
         const isAuthError =
@@ -275,6 +304,8 @@ function PracticeContent() {
         isCorrect,
         feedbackMessage: feedbackMsg,
         feedbackTier: tier,
+        geminiSuggestion,
+        feedbackLanguage: feedbackLang,
         timestamp: new Date(),
         audioBlob: blob,
       };
@@ -375,6 +406,42 @@ function PracticeContent() {
           </div>
         )}
 
+        {/* AI Coach Feedback Language Switcher */}
+        <div className="flex items-center justify-between mb-4 px-3.5 py-2 rounded-2xl bg-white border border-stone-200/90 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-[11px] text-indigo-700">
+              ✨
+            </span>
+            <span className="text-xs font-semibold text-zinc-700">
+              {lang === "hi" ? "एआई कोच भाषा:" : "AI Coach Language:"}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-xl border border-stone-200/80">
+            <button
+              type="button"
+              onClick={() => handleFeedbackLangChange("hi")}
+              className={`px-3 py-1 text-xs rounded-lg font-bold transition-all ${
+                feedbackLang === "hi"
+                  ? "bg-indigo-600 text-white shadow-xs"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              हिन्दी
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFeedbackLangChange("en")}
+              className={`px-3 py-1 text-xs rounded-lg font-bold transition-all ${
+                feedbackLang === "en"
+                  ? "bg-indigo-600 text-white shadow-xs"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              English
+            </button>
+          </div>
+        </div>
+
         {/* Difficulty Selector Tabs */}
         <div className="flex items-center gap-1.5 p-1 bg-stone-100/80 border border-stone-200/80 rounded-2xl mb-6 shadow-xs">
           {[
@@ -429,6 +496,8 @@ function PracticeContent() {
             expectedWord={currentWord.word}
             onTryAgain={handleTryAgain}
             onNextWord={handleNextWord}
+            feedbackLanguage={feedbackLang}
+            onFeedbackLanguageChange={handleFeedbackLangChange}
           />
         </div>
 
