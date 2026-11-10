@@ -231,8 +231,36 @@ export class AudioRecorder {
   }
 }
 
-// ── Global Audio Trackers for Instant Stopping ───────────────
+// ── Global Audio Trackers for Instant Stopping & Priming ────────
 let _activeAudioElement: HTMLAudioElement | null = null;
+let _sharedAudioElement: HTMLAudioElement | null = null;
+
+/**
+ * Prime audio playback during a user gesture (such as clicking the mic button).
+ * This unlocks browser autoplay policies for subsequent audio playback.
+ */
+export function primeAudioPlayback(): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (!_sharedAudioElement) {
+      _sharedAudioElement = new Audio();
+    }
+    // Silent 1-sample WAV to prime the audio element within user interaction
+    _sharedAudioElement.src =
+      "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+    const playPromise = _sharedAudioElement.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {});
+    }
+  } catch {}
+
+  // Also prime speech synthesis
+  try {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.resume();
+    }
+  } catch {}
+}
 
 /**
  * Stops any active speech synthesis or audio playback in progress.
@@ -254,7 +282,58 @@ export function stopSpeaking(): void {
 }
 
 /**
+ * Play pre-synthesized audio (e.g. data:audio/mpeg;base64,...) directly with zero latency.
+ */
+export async function playDirectAudio(audioSrc: string): Promise<void> {
+  if (!audioSrc) return;
+  stopSpeaking();
+
+  return new Promise<void>((resolve, reject) => {
+    if (!_sharedAudioElement) {
+      _sharedAudioElement = new Audio();
+    }
+    const audio = _sharedAudioElement;
+    _activeAudioElement = audio;
+
+    const cleanup = () => {
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("error", onError);
+    };
+
+    const onEnded = () => {
+      cleanup();
+      if (_activeAudioElement === audio) {
+        _activeAudioElement = null;
+      }
+      resolve();
+    };
+
+    const onError = () => {
+      cleanup();
+      if (_activeAudioElement === audio) {
+        _activeAudioElement = null;
+      }
+      reject(new Error("Direct audio playback failed"));
+    };
+
+    audio.addEventListener("ended", onEnded);
+    audio.addEventListener("error", onError);
+    audio.src = audioSrc;
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        cleanup();
+        _activeAudioElement = null;
+        reject(err);
+      });
+    }
+  });
+}
+
+/**
  * Speak text using the browser's native Web Speech API as fallback.
+ * Chunks long feedback sentences cleanly to prevent Chromium speech drops.
  */
 function speakBrowserFallback(
   text: string,
@@ -269,25 +348,62 @@ function speakBrowserFallback(
 
     try {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = lang === "hi" ? "hi-IN" : "en-IN";
-      utterance.rate = Math.max(0.4, Math.min(1.8, rate));
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+
+      // Break long text into sentences (handles Hindi '।' and English '.!?')
+      const sentences = text
+        .split(/(?<=[।\.!\?\n])\s+/)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+      if (sentences.length === 0) {
+        resolve();
+        return;
+      }
 
       const voices = window.speechSynthesis.getVoices();
       const targetPrefix = lang === "hi" ? "hi" : "en";
-      const matchedVoice = voices.find(
-        (v) => v.lang.toLowerCase().startsWith(targetPrefix)
+      const matchedVoice = voices.find((v) =>
+        v.lang.toLowerCase().startsWith(targetPrefix)
       );
-      if (matchedVoice) {
-        utterance.voice = matchedVoice;
-      }
 
-      utterance.onend = () => resolve();
-      utterance.onerror = () => resolve();
+      let currentIndex = 0;
 
-      window.speechSynthesis.speak(utterance);
+      const speakNext = () => {
+        if (currentIndex >= sentences.length) {
+          resolve();
+          return;
+        }
+
+        const sentence = sentences[currentIndex++];
+        const utterance = new SpeechSynthesisUtterance(sentence);
+        utterance.lang = lang === "hi" ? "hi-IN" : "en-IN";
+        utterance.rate = Math.max(0.4, Math.min(1.8, rate));
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+
+        if (matchedVoice) {
+          utterance.voice = matchedVoice;
+        }
+
+        utterance.onend = () => {
+          speakNext();
+        };
+
+        utterance.onerror = (e) => {
+          console.warn("Speech utterance ended or canceled:", e);
+          speakNext();
+        };
+
+        window.speechSynthesis.speak(utterance);
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+      };
+
+      setTimeout(speakNext, 30);
     } catch {
       resolve();
     }
@@ -323,10 +439,18 @@ export async function playFastTts(
   // Try playing via backend Fast TTS first (< 300ms)
   try {
     await new Promise<void>((resolve, reject) => {
-      const audio = new Audio(ttsUrl);
+      if (!_sharedAudioElement) {
+        _sharedAudioElement = new Audio();
+      }
+      const audio = _sharedAudioElement;
       _activeAudioElement = audio;
 
-      // Fail-fast timer: if backend audio hasn't started playing within 3.5s, fallback
+      const safeRate = Math.max(0.35, Math.min(2.0, rate));
+      audio.defaultPlaybackRate = safeRate;
+      audio.playbackRate = safeRate;
+      audio.src = ttsUrl;
+
+      // Fail-fast timer: if backend audio hasn't started playing within 6.5s, fallback
       let timeoutId: ReturnType<typeof setTimeout> | null = setTimeout(() => {
         cleanup();
         try {
@@ -337,20 +461,26 @@ export async function playFastTts(
           _activeAudioElement = null;
         }
         reject(new Error("Backend TTS timeout"));
-      }, 3500);
+      }, 6500);
 
       const cleanup = () => {
         if (timeoutId) {
           clearTimeout(timeoutId);
           timeoutId = null;
         }
+        audio.removeEventListener("loadedmetadata", onLoaded);
         audio.removeEventListener("playing", onPlaying);
         audio.removeEventListener("ended", onEnded);
         audio.removeEventListener("error", onError);
       };
 
+      const onLoaded = () => {
+        audio.playbackRate = safeRate;
+      };
+
       // Crucial: Clear timeout as soon as audio actually begins playing!
       const onPlaying = () => {
+        audio.playbackRate = safeRate;
         if (timeoutId) {
           clearTimeout(timeoutId);
           timeoutId = null;
@@ -377,6 +507,7 @@ export async function playFastTts(
         reject(new Error("Audio load error"));
       };
 
+      audio.addEventListener("loadedmetadata", onLoaded);
       audio.addEventListener("playing", onPlaying);
       audio.addEventListener("ended", onEnded);
       audio.addEventListener("error", onError);

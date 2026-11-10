@@ -56,6 +56,8 @@ export interface PronunciationAttempt {
   timestamp: Date;
   /** The raw audio blob recorded by the user (for playback) */
   audioBlob?: Blob;
+  /** Pre-synthesized base64 or URL audio for instant zero-latency feedback playback */
+  feedbackAudio?: string;
 }
 
 export type FeedbackTier = "excellent" | "almost_there" | "needs_improvement";

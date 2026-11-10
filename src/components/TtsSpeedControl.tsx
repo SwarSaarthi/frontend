@@ -82,15 +82,18 @@ export default function TtsSpeedControl({
   showLabel = true,
 }: TtsSpeedControlProps) {
   const { t, lang } = useLanguage();
+  const isSmall = size === "sm";
 
   return (
     <div
-      className={`inline-flex items-center rounded-full bg-stone-100/90 p-1 border border-stone-200/90 shadow-2xs ${className}`}
+      className={`inline-flex items-center rounded-full bg-stone-100/90 border border-stone-200/90 shadow-2xs shrink-0 ${
+        isSmall ? "p-0.5" : "p-1"
+      } ${className}`}
       role="group"
       aria-label={t.playbackSpeed}
     >
       {showLabel && (
-        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 px-2 select-none">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 px-1.5 select-none">
           {lang === "hi" ? "गति" : "Speed"}
         </span>
       )}
@@ -106,8 +109,8 @@ export default function TtsSpeedControl({
               type="button"
               onClick={() => onSpeedSelect(opt.value)}
               className={`rounded-full font-bold transition-all duration-150 select-none ${
-                size === "sm"
-                  ? "px-2 py-0.5 text-[11px]"
+                isSmall
+                  ? "px-1.5 py-0.5 text-[10.5px]"
                   : "px-2.5 py-1 text-xs"
               } ${
                 isActive

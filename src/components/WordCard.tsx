@@ -9,6 +9,7 @@ import type { Word } from "@/types";
 interface WordCardProps {
   word: Word;
   isCorrect?: boolean;
+  showListenControls?: boolean;
 }
 
 function SpeakerIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -20,7 +21,7 @@ function SpeakerIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function WordCardInner({ word, isCorrect }: WordCardProps) {
+function WordCardInner({ word, isCorrect, showListenControls = true }: WordCardProps) {
   const { t, lang } = useLanguage();
   const [speed, setSpeed] = useTtsSpeed();
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -81,39 +82,42 @@ function WordCardInner({ word, isCorrect }: WordCardProps) {
         <span className="font-medium text-ink-soft">{t.meaningLabel}:</span> {meaning}
       </p>
 
-      <div className="rule my-6" />
+      {showListenControls && (
+        <>
+          <div className="rule my-6" />
 
-      {/* Playback Controls & Speed Selector */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-        <button
-          onClick={handleListen}
-          disabled={isSpeaking}
-          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold border transition-all duration-150 shadow-2xs ${
-            isSpeaking
-              ? "bg-mist border-line text-ink-soft cursor-wait scale-[0.98]"
-              : "bg-white border-line text-ink hover:border-stone-strong hover:bg-mist active:scale-95"
-          }`}
-          aria-label={t.listenCorrect}
-        >
-          <SpeakerIcon
-            className={`w-4 h-4 transition-transform ${
-              isSpeaking ? "opacity-70 text-clay animate-pulse scale-110" : "text-ink-soft"
-            }`}
-          />
-          <span>{isSpeaking ? "..." : t.listenCorrect}</span>
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-stone/60 text-ink-soft border border-line">
-            {speed}×
-          </span>
-        </button>
+          {/* Playback Controls & Speed Selector */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={handleListen}
+              disabled={isSpeaking}
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold border transition-all duration-150 shadow-2xs ${
+                isSpeaking
+                  ? "bg-mist border-line text-ink-soft cursor-wait scale-[0.98]"
+                  : "bg-white border-line text-ink hover:border-stone-strong hover:bg-mist active:scale-95"
+              }`}
+              aria-label={t.listenCorrect}
+            >
+              <SpeakerIcon
+                className={`w-4 h-4 transition-transform ${
+                  isSpeaking ? "opacity-70 text-clay animate-pulse scale-110" : "text-ink-soft"
+                }`}
+              />
+              <span>{isSpeaking ? "..." : t.listenCorrect}</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-stone/60 text-ink-soft border border-line">
+                {speed}×
+              </span>
+            </button>
 
-        <TtsSpeedControl
-          speed={speed}
-          onSpeedSelect={handleSpeedSelect}
-        />
-      </div>
+            <TtsSpeedControl
+              speed={speed}
+              onSpeedSelect={handleSpeedSelect}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 export default memo(WordCardInner);
-

@@ -146,6 +146,7 @@ export interface PracticeSubmitResult {
   streak: number;
   gemini_suggestion?: string;
   feedback_language?: "en" | "hi";
+  feedback_audio?: string;
 }
 
 export interface AsrPredictResult {
@@ -167,6 +168,7 @@ export interface AsrPredictResult {
   streak: number;
   gemini_suggestion?: string;
   feedback_language?: "en" | "hi";
+  feedback_audio?: string;
 }
 
 export interface ProfileSummary {
@@ -268,7 +270,7 @@ export const practiceApi = {
     }),
 
   getHistory: (limit = 20, offset = 0) =>
-    apiFetch<{ items: any[]; limit: number; offset: number }>(
+    apiFetch<{ items: unknown[]; limit: number; offset: number }>(
       `/api/practice/history?limit=${limit}&offset=${offset}`
     ),
 };
