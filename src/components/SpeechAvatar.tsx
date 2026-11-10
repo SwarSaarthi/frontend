@@ -39,10 +39,24 @@ function SpeechAvatarInner({ word, disabled = false, className = "" }: SpeechAva
 
   const handleListenAtSpeed = useCallback(
     async (playbackSpeed: number) => {
-      if (isSpeaking || disabled || !word) return;
-      setIsSpeaking(true);
+      if (isSpeaking) {
+        stopSpeaking();
+        setIsSpeaking(false);
+        return;
+      }
+      if (disabled || !word) return;
+
       try {
-        await speakHindi(word, playbackSpeed);
+        await speakHindi(word, playbackSpeed, {
+          onStart: () => {
+            // Trigger 3D lip-sync ONLY when audio actually starts playing through speakers
+            setIsSpeaking(true);
+          },
+          onEnd: () => {
+            // Immediately stop 3D lip-sync when audio ends (avoids trailing mouth movements)
+            setIsSpeaking(false);
+          },
+        });
       } catch (error) {
         console.error("Speech avatar TTS error:", error);
       } finally {
@@ -121,12 +135,26 @@ function SpeechAvatarInner({ word, disabled = false, className = "" }: SpeechAva
         />
       </div>
 
-      {/* Target Word Subtitle */}
-      <div className="mt-3 mb-4">
+      {/* Target Word/Sentence Subtitle */}
+      <div className="mt-3 mb-4 px-2">
         <p className="text-[11px] uppercase tracking-wider text-ink-faint font-semibold">
-          {lang === "hi" ? "लक्ष्य शब्द" : "Target Word"}
+          {word.includes(" ")
+            ? lang === "hi"
+              ? "लक्ष्य वाक्य"
+              : "Target Sentence"
+            : lang === "hi"
+              ? "लक्ष्य शब्द"
+              : "Target Word"}
         </p>
-        <p className="text-2xl sm:text-3xl font-bold font-hindi text-ink leading-tight">
+        <p
+          className={`font-bold font-hindi text-ink ${
+            word.length > 30
+              ? "text-sm sm:text-base leading-snug line-clamp-3"
+              : word.length > 14
+                ? "text-base sm:text-lg leading-snug"
+                : "text-2xl sm:text-3xl leading-tight"
+          }`}
+        >
           {word}
         </p>
       </div>
@@ -135,15 +163,15 @@ function SpeechAvatarInner({ word, disabled = false, className = "" }: SpeechAva
       <div className="flex flex-col items-center justify-center gap-3 pt-3 border-t border-stone-200/80">
         <button
           onClick={handleListen}
-          disabled={isSpeaking || disabled}
+          disabled={disabled}
           className={`w-full inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-full text-xs font-bold border transition-all duration-150 shadow-xs active:scale-[0.98] ${
             isSpeaking
-              ? "bg-clay text-white border-clay shadow-clay-ring/60 cursor-wait"
+              ? "bg-clay-hover text-white border-clay-hover shadow-clay-ring/60"
               : disabled
                 ? "bg-stone-100 text-zinc-400 border-stone-200 cursor-not-allowed"
                 : "bg-clay text-white border-clay hover:bg-clay-hover shadow-xs"
           }`}
-          aria-label={t.listenCorrect}
+          aria-label={isSpeaking ? (lang === "hi" ? "रोकें" : "Stop") : t.listenCorrect}
         >
           <SpeakerIcon
             className={`w-4 h-4 shrink-0 transition-transform ${
@@ -153,8 +181,8 @@ function SpeechAvatarInner({ word, disabled = false, className = "" }: SpeechAva
           <span>
             {isSpeaking
               ? lang === "hi"
-                ? "सुन रहे हैं..."
-                : "Playing..."
+                ? "रोकें (Stop)"
+                : "Stop"
               : t.listenCorrect}
           </span>
           <span

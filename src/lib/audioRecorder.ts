@@ -253,17 +253,10 @@ export function primeAudioPlayback(): void {
       playPromise.catch(() => {});
     }
   } catch {}
-
-  // Also prime speech synthesis
-  try {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.resume();
-    }
-  } catch {}
 }
 
 /**
- * Stops any active speech synthesis or audio playback in progress.
+ * Stops any active speech synthesis or audio playback in progress immediately.
  */
 export function stopSpeaking(): void {
   if (_activeAudioElement) {
@@ -271,18 +264,30 @@ export function stopSpeaking(): void {
       _activeAudioElement.pause();
       _activeAudioElement.currentTime = 0;
       _activeAudioElement.src = "";
-    } catch {
-      // Ignore cleanup error
-    }
+    } catch {}
     _activeAudioElement = null;
   }
+
+  // Also cancel any browser speech synthesis to prevent ghost audio
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
+    } catch {}
   }
 }
 
+// Ensure all audio stops immediately if the user refreshes, navigates away, or closes the tab
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", () => {
+    stopSpeaking();
+  });
+  window.addEventListener("pagehide", () => {
+    stopSpeaking();
+  });
+}
+
 /**
- * Play pre-synthesized audio (e.g. data:audio/mpeg;base64,...) directly with zero latency.
+ * Play pre-synthesized audio (data:audio/mpeg;base64,...) directly with zero latency.
  */
 export async function playDirectAudio(audioSrc: string): Promise<void> {
   if (!audioSrc) return;
@@ -298,9 +303,19 @@ export async function playDirectAudio(audioSrc: string): Promise<void> {
     const cleanup = () => {
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("error", onError);
+      audio.removeEventListener("pause", onPause);
     };
 
     const onEnded = () => {
+      cleanup();
+      if (_activeAudioElement === audio) {
+        _activeAudioElement = null;
+      }
+      resolve();
+    };
+
+    const onPause = () => {
+      // If paused externally by stopSpeaking, resolve cleanly without triggering secondary errors
       cleanup();
       if (_activeAudioElement === audio) {
         _activeAudioElement = null;
@@ -313,11 +328,12 @@ export async function playDirectAudio(audioSrc: string): Promise<void> {
       if (_activeAudioElement === audio) {
         _activeAudioElement = null;
       }
-      reject(new Error("Direct audio playback failed"));
+      reject(new Error("Audio playback failed"));
     };
 
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("error", onError);
+    audio.addEventListener("pause", onPause);
     audio.src = audioSrc;
 
     const playPromise = audio.play();
@@ -331,95 +347,20 @@ export async function playDirectAudio(audioSrc: string): Promise<void> {
   });
 }
 
-/**
- * Speak text using the browser's native Web Speech API as fallback.
- * Chunks long feedback sentences cleanly to prevent Chromium speech drops.
- */
-function speakBrowserFallback(
-  text: string,
-  lang: string = "hi",
-  rate: number = 0.85
-): Promise<void> {
-  return new Promise((resolve) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      resolve();
-      return;
-    }
-
-    try {
-      window.speechSynthesis.cancel();
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-
-      // Break long text into sentences (handles Hindi '।' and English '.!?')
-      const sentences = text
-        .split(/(?<=[।\.!\?\n])\s+/)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-
-      if (sentences.length === 0) {
-        resolve();
-        return;
-      }
-
-      const voices = window.speechSynthesis.getVoices();
-      const targetPrefix = lang === "hi" ? "hi" : "en";
-      const matchedVoice = voices.find((v) =>
-        v.lang.toLowerCase().startsWith(targetPrefix)
-      );
-
-      let currentIndex = 0;
-
-      const speakNext = () => {
-        if (currentIndex >= sentences.length) {
-          resolve();
-          return;
-        }
-
-        const sentence = sentences[currentIndex++];
-        const utterance = new SpeechSynthesisUtterance(sentence);
-        utterance.lang = lang === "hi" ? "hi-IN" : "en-IN";
-        utterance.rate = Math.max(0.4, Math.min(1.8, rate));
-        utterance.pitch = 1.0;
-        utterance.volume = 1.0;
-
-        if (matchedVoice) {
-          utterance.voice = matchedVoice;
-        }
-
-        utterance.onend = () => {
-          speakNext();
-        };
-
-        utterance.onerror = (e) => {
-          console.warn("Speech utterance ended or canceled:", e);
-          speakNext();
-        };
-
-        window.speechSynthesis.speak(utterance);
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
-        }
-      };
-
-      setTimeout(speakNext, 30);
-    } catch {
-      resolve();
-    }
-  });
+export interface FastTtsOptions {
+  lang?: string;
+  rate?: number;
+  onStart?: () => void;
+  onEnd?: () => void;
 }
 
 /**
- * High-performance TTS: Plays audio from the backend FastAPI TTS service
- * with fallback to browser SpeechSynthesis.
- *
- * @param text - The Hindi or English text to speak
- * @param options - Language and speech rate options
+ * Single, natural female neural voice TTS (Microsoft Edge Neural hi-IN-SwaraNeural / en-IN-NeerjaNeural).
+ * Streams MP3 audio directly from the backend FastAPI TTS service.
  */
 export async function playFastTts(
   text: string,
-  options: { lang?: string; rate?: number } = {}
+  options: FastTtsOptions = {}
 ): Promise<void> {
   if (!text || !text.trim()) return;
 
@@ -429,15 +370,36 @@ export async function playFastTts(
   stopSpeaking();
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-  const params = new URLSearchParams({
-    text: text.trim(),
-    lang,
-    speed: String(rate),
-  });
-  const ttsUrl = `${baseUrl}/api/tts?${params.toString()}`;
+  let audioUrl = "";
+  let objectUrlToRevoke: string | null = null;
 
-  // Try playing via backend Fast TTS first (< 300ms)
   try {
+    if (text.length > 100) {
+      // For longer sentences/feedback: use POST with JSON body to prevent URL encoding issues
+      const res = await fetch(`${baseUrl}/api/tts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: text.trim(),
+          lang,
+          speed: rate,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error(`TTS server responded with ${res.status}`);
+      }
+      const blob = await res.blob();
+      objectUrlToRevoke = URL.createObjectURL(blob);
+      audioUrl = objectUrlToRevoke;
+    } else {
+      const params = new URLSearchParams({
+        text: text.trim(),
+        lang,
+        speed: String(rate),
+      });
+      audioUrl = `${baseUrl}/api/tts?${params.toString()}`;
+    }
+
     await new Promise<void>((resolve, reject) => {
       if (!_sharedAudioElement) {
         _sharedAudioElement = new Audio();
@@ -445,12 +407,20 @@ export async function playFastTts(
       const audio = _sharedAudioElement;
       _activeAudioElement = audio;
 
-      const safeRate = Math.max(0.35, Math.min(2.0, rate));
-      audio.defaultPlaybackRate = safeRate;
-      audio.playbackRate = safeRate;
-      audio.src = ttsUrl;
+      // Note: Backend TTS service already synthesizes audio with the requested speed/rate applied.
+      // Playing at 1.0 avoids double-scaling and keeps mouth animation tightly synchronized.
+      audio.defaultPlaybackRate = 1.0;
+      audio.playbackRate = 1.0;
+      audio.src = audioUrl;
 
-      // Fail-fast timer: if backend audio hasn't started playing within 6.5s, fallback
+      let hasFiredEnd = false;
+      const fireEndOnce = () => {
+        if (!hasFiredEnd) {
+          hasFiredEnd = true;
+          options.onEnd?.();
+        }
+      };
+
       let timeoutId: ReturnType<typeof setTimeout> | null = setTimeout(() => {
         cleanup();
         try {
@@ -460,30 +430,54 @@ export async function playFastTts(
         if (_activeAudioElement === audio) {
           _activeAudioElement = null;
         }
-        reject(new Error("Backend TTS timeout"));
-      }, 6500);
+        fireEndOnce();
+        resolve(); // Resolve on timeout rather than cascading into another speech system
+      }, 15000);
 
       const cleanup = () => {
         if (timeoutId) {
           clearTimeout(timeoutId);
           timeoutId = null;
         }
+        if (objectUrlToRevoke) {
+          URL.revokeObjectURL(objectUrlToRevoke);
+          objectUrlToRevoke = null;
+        }
         audio.removeEventListener("loadedmetadata", onLoaded);
+        audio.removeEventListener("canplay", onCanPlay);
         audio.removeEventListener("playing", onPlaying);
+        audio.removeEventListener("timeupdate", onTimeUpdate);
         audio.removeEventListener("ended", onEnded);
         audio.removeEventListener("error", onError);
+        audio.removeEventListener("pause", onPause);
       };
 
-      const onLoaded = () => {
-        audio.playbackRate = safeRate;
-      };
-
-      // Crucial: Clear timeout as soon as audio actually begins playing!
-      const onPlaying = () => {
-        audio.playbackRate = safeRate;
+      const clearConnectionTimeout = () => {
         if (timeoutId) {
           clearTimeout(timeoutId);
           timeoutId = null;
+        }
+      };
+
+      const onLoaded = () => {
+        clearConnectionTimeout();
+      };
+
+      const onCanPlay = () => {
+        clearConnectionTimeout();
+      };
+
+      const onPlaying = () => {
+        clearConnectionTimeout();
+        // Signal mouth animation to start ONLY when actual speaker audio playback begins!
+        options.onStart?.();
+      };
+
+      const onTimeUpdate = () => {
+        clearConnectionTimeout();
+        // Trim silence tail: if within 0.12s of the audio duration, signal end early to prevent visual lag
+        if (audio.duration && audio.duration > 0.4 && audio.currentTime >= audio.duration - 0.12) {
+          fireEndOnce();
         }
       };
 
@@ -492,6 +486,16 @@ export async function playFastTts(
         if (_activeAudioElement === audio) {
           _activeAudioElement = null;
         }
+        fireEndOnce();
+        resolve();
+      };
+
+      const onPause = () => {
+        cleanup();
+        if (_activeAudioElement === audio) {
+          _activeAudioElement = null;
+        }
+        fireEndOnce();
         resolve();
       };
 
@@ -504,51 +508,69 @@ export async function playFastTts(
         if (_activeAudioElement === audio) {
           _activeAudioElement = null;
         }
+        fireEndOnce();
         reject(new Error("Audio load error"));
       };
 
       audio.addEventListener("loadedmetadata", onLoaded);
+      audio.addEventListener("canplay", onCanPlay);
       audio.addEventListener("playing", onPlaying);
+      audio.addEventListener("timeupdate", onTimeUpdate);
       audio.addEventListener("ended", onEnded);
       audio.addEventListener("error", onError);
+      audio.addEventListener("pause", onPause);
 
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
           cleanup();
           _activeAudioElement = null;
+          fireEndOnce();
           reject(err);
         });
       }
     });
   } catch (err) {
-    // If backend TTS fails or takes too long, stop cleanly and fallback to browser
+    // Stop cleanly without triggering any secondary TTS engines
     stopSpeaking();
-    console.warn("Backend TTS failed, using browser synthesis fallback:", err);
-    await speakBrowserFallback(text, lang, rate);
+    options.onEnd?.();
+    console.warn("TTS playback stopped or unavailable:", err);
   }
 }
 
 /**
- * Speak a Hindi word with priority given to Fast Backend TTS.
+ * Speak a Hindi word using the natural female neural voice.
  */
-export function speakHindi(text: string, rate: number = 0.85): Promise<void> {
-  return playFastTts(text, { lang: "hi", rate });
+export function speakHindi(
+  text: string,
+  rate: number = 0.85,
+  callbacks?: { onStart?: () => void; onEnd?: () => void }
+): Promise<void> {
+  return playFastTts(text, {
+    lang: "hi",
+    rate,
+    onStart: callbacks?.onStart,
+    onEnd: callbacks?.onEnd,
+  });
 }
 
 /**
- * Speak articulation coaching / feedback text.
- * Automatically respects language (Hindi or English).
+ * Speak articulation coaching / feedback text using the natural female neural voice.
  */
 export function speakFeedback(
   text: string,
   lang: string = "en",
-  rate: number = 0.9
+  rate: number = 0.9,
+  callbacks?: { onStart?: () => void; onEnd?: () => void }
 ): Promise<void> {
-  // Strip emojis, markdown symbols, and bullets for smooth speech flow
   const clean = text
     .replace(/[🎯👅💡✨👉→•]/g, "")
     .replace(/[*_#`~>\[\]]/g, "")
     .trim();
-  return playFastTts(clean, { lang, rate });
+  return playFastTts(clean, {
+    lang,
+    rate,
+    onStart: callbacks?.onStart,
+    onEnd: callbacks?.onEnd,
+  });
 }

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, memo } from "react";
 import * as THREE from "three";
+import { speakHindi, stopSpeaking } from "@/lib/audioRecorder";
 
 export interface ThreeSpeechFaceProps {
   word?: string;
@@ -603,7 +604,7 @@ function tokenize(word: string): Token[] {
     // 1. Devanagari consonants
     const place = code >= 0x0900 && code <= 0x097f ? placeOfDeva(code) : null;
     if (place) {
-      let asp = ASPIRATED.has(code);
+      const asp = ASPIRATED.has(code);
       let j = i + 1;
       if (chars[j] === "़") j++; // nukta
       const nx = chars[j];
@@ -844,7 +845,7 @@ function sampleTimeline(tl: Timeline, t: number): { pose: Pose; key: Key } {
   let i = 0;
   while (i < keys.length - 1 && t >= starts[i + 1]) i++;
   const k = keys[i];
-  const nxt = keys[(i + 1) % keys.length];
+  const nxt = i < keys.length - 1 ? keys[i + 1] : k;
   const u = clamp((t - starts[i]) / k.dur, 0, 1);
 
   // Co-articulated transition:
@@ -984,12 +985,14 @@ function ThreeSpeechFaceInner(props: ThreeSpeechFaceProps) {
   const manualPoseRef = useRef<Pose | null>(manualPose);
   const manualLabelRef = useRef<string>(manualLabel);
 
-  isSpeakingRef.current = activeSpeaking;
-  wordRef.current = activeWord;
-  speedRef.current = activeSpeed;
-  langRef.current = detectedLang;
-  manualPoseRef.current = manualPose;
-  manualLabelRef.current = manualLabel;
+  useEffect(() => {
+    isSpeakingRef.current = activeSpeaking;
+    wordRef.current = activeWord;
+    speedRef.current = activeSpeed;
+    langRef.current = detectedLang;
+    manualPoseRef.current = manualPose;
+    manualLabelRef.current = manualLabel;
+  });
 
   useEffect(() => {
     const container = mountRef.current;
@@ -1742,17 +1745,26 @@ function ThreeSpeechFaceInner(props: ThreeSpeechFaceProps) {
         target = manualPoseRef.current;
         hud = manualLabelRef.current;
       } else if (speaking) {
-        const unitSec = 0.15 / Math.max(0.2, speedRef.current || 0.75);
+        // Natural speech pacing (~230ms per articulation frame / speed)
+        const unitSec = 0.22 / Math.max(0.2, speedRef.current || 0.75);
         tUnits += dt / unitSec;
-        if (tUnits >= timeline.total) tUnits -= timeline.total;
-        const s = sampleTimeline(timeline, tUnits);
-        target = s.pose;
-        const k = s.key;
-        const sym = k.symbol ? `${k.symbol} · ` : "";
-        hud =
-          langRef.current === "hi"
-            ? `${sym}${k.labelHi} (${k.name})`
-            : `${sym}${k.name} (${k.labelHi})`;
+        if (tUnits >= timeline.total) {
+          // Utterance articulation completed! Rest naturally, do not loop mouth movements
+          target = REST_POSE;
+          hud =
+            langRef.current === "hi"
+              ? "आराम स्थिति • तैयार"
+              : "Natural Rest • Ready";
+        } else {
+          const s = sampleTimeline(timeline, tUnits);
+          target = s.pose;
+          const k = s.key;
+          const sym = k.symbol ? `${k.symbol} · ` : "";
+          hud =
+            langRef.current === "hi"
+              ? `${sym}${k.labelHi} (${k.name})`
+              : `${sym}${k.name} (${k.labelHi})`;
+        }
       } else {
         hud =
           langRef.current === "hi"
@@ -1825,18 +1837,14 @@ function ThreeSpeechFaceInner(props: ThreeSpeechFaceProps) {
   const speakWithTTS = (textToSpeak: string) => {
     setManualPose(null);
     setDemoWord(textToSpeak);
-    setDemoSpeaking(true);
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(textToSpeak);
-        u.lang = /[ऀ-ॿ]/.test(textToSpeak) ? "hi-IN" : "en-US";
-        u.rate = clamp(demoSpeed, 0.5, 1.5);
-        window.speechSynthesis.speak(u);
-      } catch {
-        // Ignore if speechSynthesis is unavailable in sandbox
-      }
-    }
+    speakHindi(textToSpeak, demoSpeed, {
+      onStart: () => setDemoSpeaking(true),
+      onEnd: () => setDemoSpeaking(false),
+    })
+      .catch(() => {})
+      .finally(() => {
+        setDemoSpeaking(false);
+      });
   };
 
   return (
@@ -1894,6 +1902,7 @@ function ThreeSpeechFaceInner(props: ThreeSpeechFaceProps) {
                 if (!demoSpeaking) {
                   speakWithTTS(demoWord);
                 } else {
+                  stopSpeaking();
                   setDemoSpeaking(false);
                 }
               }}

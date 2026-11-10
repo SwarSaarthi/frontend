@@ -65,16 +65,35 @@ function WordCardInner({ word, isCorrect, showListenControls = true }: WordCardP
         isCorrect ? "border-moss bg-moss-soft" : ""
       }`}
     >
-      <div className="flex justify-center gap-1 mb-5" aria-hidden>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <span
-            key={i}
-            className={`w-1.5 h-1.5 rounded-full ${i < word.difficulty ? "bg-ink" : "bg-stone"}`}
-          />
-        ))}
+      <div className="flex items-center justify-center gap-2 mb-4" aria-hidden>
+        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-stone-100 text-ink-soft border border-stone-200/80">
+          {word.itemType === "sentence" || word.word.includes(" ")
+            ? lang === "hi"
+              ? "वाक्य अभ्यास"
+              : "Sentence"
+            : lang === "hi"
+              ? "शब्द अभ्यास"
+              : "Word"}
+        </span>
+        <div className="flex items-center gap-1">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full ${i < word.difficulty ? "bg-ink" : "bg-stone"}`}
+            />
+          ))}
+        </div>
       </div>
 
-      <h2 className="text-5xl sm:text-6xl font-bold font-hindi text-ink leading-none tracking-tight">
+      <h2
+        className={`font-bold font-hindi text-ink tracking-tight ${
+          word.word.length > 35
+            ? "text-xl sm:text-2xl leading-relaxed max-w-xl mx-auto"
+            : word.word.length > 14
+              ? "text-2xl sm:text-3xl leading-snug max-w-lg mx-auto"
+              : "text-5xl sm:text-6xl leading-none"
+        }`}
+      >
         {word.word}
       </h2>
       <p className="text-sm text-ink-soft italic mt-3">{word.transliteration}</p>

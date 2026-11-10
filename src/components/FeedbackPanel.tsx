@@ -278,14 +278,11 @@ function FeedbackPanelInner({
           // Zero-latency instant playback: audio was already pre-synthesized by the backend!
           await playDirectAudio(audioSource);
         } else {
-          // Fallback to fast backend TTS endpoint or browser synthesis
+          // Stream from backend neural TTS service
           await speakFeedback(textToSpeak, voiceLang);
         }
-      } catch (err) {
-        console.warn("Direct audio playback failed, falling back to speech synthesis:", err);
-        try {
-          await speakFeedback(textToSpeak, voiceLang);
-        } catch {}
+      } catch {
+        // Playback ended or stopped by user — do not trigger any secondary speech
       } finally {
         setPlayingCoach(false);
       }
@@ -665,8 +662,8 @@ function FeedbackPanelInner({
                     <span>
                       {playingCoach
                         ? lang === "hi"
-                          ? "सुन रहे हैं…"
-                          : "Speaking…"
+                          ? "रोकें (Stop)"
+                          : "Stop"
                         : lang === "hi"
                           ? "सलाह सुनें"
                           : "Listen"}

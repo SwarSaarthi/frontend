@@ -27,6 +27,8 @@ export interface Word {
    * For now, we use browser's SpeechSynthesis API as a placeholder.
    */
   audioUrl?: string;
+  /** Whether this practice item is a single word or a full sentence */
+  itemType?: "word" | "sentence";
 }
 
 /** Result of a single pronunciation attempt */

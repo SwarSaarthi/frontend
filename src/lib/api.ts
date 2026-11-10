@@ -123,6 +123,7 @@ export interface WordItem {
   category: string;
   difficulty: "basic" | "intermediate" | "advanced";
   audio_url?: string | null;
+  item_type?: "word" | "sentence";
 }
 
 export interface PracticeSubmitPayload {
@@ -240,24 +241,36 @@ export const authApi = {
 };
 
 export const wordsApi = {
-  list: (params?: { difficulty?: string; category?: string; limit?: number; offset?: number }) => {
+  list: (params?: { difficulty?: string; category?: string; item_type?: string; limit?: number; offset?: number }) => {
     const query = new URLSearchParams();
     if (params?.difficulty) query.set("difficulty", params.difficulty);
     if (params?.category) query.set("category", params.category);
+    if (params?.item_type) query.set("item_type", params.item_type);
     if (params?.limit) query.set("limit", String(params.limit));
     if (params?.offset) query.set("offset", String(params.offset));
     return apiFetch<WordItem[]>(`/api/words?${query.toString()}`);
   },
 
-  getRandom: (count = 10, difficulty?: string) => {
+  getRandom: (count = 10, difficulty?: string, item_type?: string) => {
     const query = new URLSearchParams({ count: String(count) });
     if (difficulty) query.set("difficulty", difficulty);
+    if (item_type) query.set("item_type", item_type);
     return apiFetch<WordItem[]>(`/api/words/random?${query.toString()}`);
   },
 
-  getCounts: () => apiFetch<{ basic: number; intermediate: number; advanced: number; total: number }>("/api/words/count"),
+  getCounts: (item_type?: string) => {
+    const query = new URLSearchParams();
+    if (item_type) query.set("item_type", item_type);
+    const qs = query.toString() ? `?${query.toString()}` : "";
+    return apiFetch<{ basic: number; intermediate: number; advanced: number; total: number }>(`/api/words/count${qs}`);
+  },
 
-  getCategories: () => apiFetch<string[]>("/api/words/categories"),
+  getCategories: (item_type?: string) => {
+    const query = new URLSearchParams();
+    if (item_type) query.set("item_type", item_type);
+    const qs = query.toString() ? `?${query.toString()}` : "";
+    return apiFetch<string[]>(`/api/words/categories${qs}`);
+  },
 
   getById: (id: string) => apiFetch<WordItem>(`/api/words/${id}`),
 };
