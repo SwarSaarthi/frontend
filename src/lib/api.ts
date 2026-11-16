@@ -161,9 +161,7 @@ export interface AsrPredictResult {
   feedback_tier?: "excellent" | "almost_there" | "needs_improvement";
   feedback: string;
   details: {
-    char_ratio: number;
-    token_sort_ratio: number;
-    partial_ratio: number;
+    cer_based_score: number;
   };
   needs_focus: boolean;
   streak: number;

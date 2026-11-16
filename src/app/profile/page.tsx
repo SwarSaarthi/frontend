@@ -6,11 +6,8 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
 import StatsCard from "@/components/StatsCard";
 import DifficultWords from "@/components/DifficultWords";
-import { mockUserProfile } from "@/lib/mockData";
 import {
   profileApi,
-  authApi,
-  getAuthToken,
   type ProfileSummary,
   type FocusWordItem,
   type StreakDay,
@@ -77,8 +74,7 @@ export default function ProfilePage() {
 function ProfileContent() {
   const router = useRouter();
   const { t, lang } = useLanguage();
-  const { logout } = useAuth();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { logout, isLoggedIn, user } = useAuth();
   const [profileSummary, setProfileSummary] = useState<ProfileSummary | null>(
     null,
   );
@@ -87,6 +83,8 @@ function ProfileContent() {
   const [difficultyProgress, setDifficultyProgress] =
     useState<DifficultyProgress | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Drag-to-scroll State & Refs
   const calendarScrollRef = useRef<HTMLDivElement>(null);
@@ -97,59 +95,41 @@ function ProfileContent() {
   useEffect(() => {
     let isMounted = true;
     async function loadProfile() {
-      const token = getAuthToken();
-      if (!token) {
-        setIsLoggedIn(false);
-        setLoading(false);
-        return;
-      }
-
-      setIsLoggedIn(true);
+      setLoading(true);
+      setLoadError(false);
       try {
-        const [summary, focus, cal, prog] = await Promise.allSettled([
+        const [summary, focus, cal, prog] = await Promise.all([
           profileApi.getSummary(),
           profileApi.getFocusWords(),
           profileApi.getStreakCalendar(365),
           profileApi.getProgress(),
         ]);
-
         if (isMounted) {
-          if (summary.status === "fulfilled") setProfileSummary(summary.value);
-          if (focus.status === "fulfilled")
-            setFocusWords(focus.value.focus_words);
-          if (cal.status === "fulfilled") setCalendarData(cal.value.calendar);
-          if (prog.status === "fulfilled") setDifficultyProgress(prog.value);
+          setProfileSummary(summary);
+          setFocusWords(focus.focus_words);
+          setCalendarData(cal.calendar);
+          setDifficultyProgress(prog);
         }
-      } catch (err) {
-        console.error("Failed to load profile data:", err);
+      } catch {
+        if (isMounted) setLoadError(true);
       } finally {
         if (isMounted) setLoading(false);
       }
     }
-
     loadProfile();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    return () => { isMounted = false; };
+  }, [retryCount]);
 
   const handleLogout = () => {
     logout();
-    setIsLoggedIn(false);
-    setProfileSummary(null);
     router.push("/login");
   };
 
-  // Profile display values (with fallback to mock data for guest preview)
-  const userName = profileSummary?.user?.full_name || mockUserProfile.name;
-  const userInitial = userName ? userName.charAt(0).toUpperCase() : "S";
-  const streakDays =
-    profileSummary?.streak?.current_streak ?? mockUserProfile.streakDays;
-  const totalPracticed =
-    profileSummary?.stats?.unique_words_practiced ??
-    mockUserProfile.totalWordsPracticed;
-  const accuracy =
-    profileSummary?.stats?.overall_accuracy ?? mockUserProfile.overallAccuracy;
+  const userName = profileSummary?.user.full_name || user?.full_name || "";
+  const userInitial = userName.charAt(0).toUpperCase();
+  const streakDays = profileSummary?.streak.current_streak ?? 0;
+  const totalPracticed = profileSummary?.stats.unique_words_practiced ?? 0;
+  const accuracy = profileSummary?.stats.overall_accuracy ?? 0;
 
   // ── LeetCode-Style Streak Heatmap Grid (52 Weeks / 1 Year) ──
   const NUM_WEEKS = 52;
@@ -337,8 +317,27 @@ function ProfileContent() {
         isDifficult: true,
       }));
     }
-    return mockUserProfile.difficultWords;
+    return [];
   }, [focusWords]);
+
+  if (loading) {
+    return (
+      <div role="status" className="min-h-[60vh] flex items-center justify-center text-sm text-ink-soft">
+        {lang === "hi" ? "प्रोफ़ाइल लोड हो रही है…" : "Loading your profile…"}
+      </div>
+    );
+  }
+
+  if (loadError || !profileSummary || !difficultyProgress) {
+    return (
+      <div role="alert" className="max-w-xl mx-auto my-12 rounded-2xl border border-line p-6 text-center">
+        <p>{lang === "hi" ? "आपकी प्रगति लोड नहीं हो सकी। कृपया फिर से प्रयास करें।" : "We could not load your progress. Please try again."}</p>
+        <button type="button" onClick={() => setRetryCount((count) => count + 1)} className="mt-4 rounded-full bg-ink px-5 py-2 text-white">
+          {lang === "hi" ? "फिर से प्रयास करें" : "Try again"}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-10 px-4 sm:px-6">
@@ -608,39 +607,21 @@ function ProfileContent() {
                 key: "basic",
                 labelEn: "Basic (मूल)",
                 labelHi: "सरल स्तर",
-                data: difficultyProgress?.breakdown?.basic || {
-                  total_words: 200,
-                  attempted_words: 45,
-                  mastered_words: 38,
-                  avg_accuracy: 88.5,
-                  completion_percentage: 22.5,
-                },
+                data: difficultyProgress.breakdown.basic,
                 color: "bg-emerald-500",
               },
               {
                 key: "intermediate",
                 labelEn: "Intermediate (मध्यम)",
                 labelHi: "मध्यम स्तर",
-                data: difficultyProgress?.breakdown?.intermediate || {
-                  total_words: 180,
-                  attempted_words: 28,
-                  mastered_words: 20,
-                  avg_accuracy: 76.2,
-                  completion_percentage: 15.5,
-                },
+                data: difficultyProgress.breakdown.intermediate,
                 color: "bg-blue-500",
               },
               {
                 key: "advanced",
                 labelEn: "Advanced (उन्नत)",
                 labelHi: "उन्नत स्तर",
-                data: difficultyProgress?.breakdown?.advanced || {
-                  total_words: 140,
-                  attempted_words: 12,
-                  mastered_words: 6,
-                  avg_accuracy: 64.0,
-                  completion_percentage: 8.5,
-                },
+                data: difficultyProgress.breakdown.advanced,
                 color: "bg-purple-500",
               },
             ].map((tier) => (

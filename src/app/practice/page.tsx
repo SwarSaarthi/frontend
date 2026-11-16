@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, Suspense } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -10,8 +10,8 @@ import SpeechAvatar from "@/components/SpeechAvatar";
 import MitraPipelineProgress from "@/components/MitraPipelineProgress";
 import ProgressBar from "@/components/ProgressBar";
 import { practiceWords as defaultMockWords, practiceSentences as defaultMockSentences } from "@/lib/mockData";
-import { wordsApi, practiceApi, asrApi, getAuthToken, type WordItem } from "@/lib/api";
-import type { FeedbackState, FeedbackTier, FeedbackType, PronunciationAttempt, Word } from "@/types";
+import { wordsApi, asrApi, getAuthToken, type WordItem } from "@/lib/api";
+import type { FeedbackState, FeedbackType, PronunciationAttempt, Word } from "@/types";
 import AuthGuard from "@/components/AuthGuard";
 
 const MicRecorder = dynamic(() => import("@/components/MicRecorder"), {
@@ -36,10 +36,15 @@ export default function PracticePage() {
           </div>
         }
       >
-        <PracticeContent />
+        <PracticeSession />
       </Suspense>
     </AuthGuard>
   );
+}
+
+function PracticeSession() {
+  const searchParams = useSearchParams();
+  return <PracticeContent key={searchParams.toString()} />;
 }
 
 function PracticeContent() {
@@ -59,6 +64,14 @@ function PracticeContent() {
     return "hi";
   });
   const [isEvaluating, setIsEvaluating] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [evaluationError, setEvaluationError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
+
+  useEffect(() => () => {
+    // Discard responses belonging to a practice session that has been left.
+    requestIdRef.current += 1;
+  }, []);
 
   const handleFeedbackLangChange = useCallback((newLang: "en" | "hi") => {
     setFeedbackLang(newLang);
@@ -199,163 +212,76 @@ function PracticeContent() {
   const totalWords = words.length;
   const isSuccess = feedback.type === "success";
 
+  const controlsLocked = isRecording || isEvaluating || isLoadingWords;
+
   const handleRecordingComplete = useCallback(
     async (blob: Blob) => {
+      const requestId = ++requestIdRef.current;
       setIsEvaluating(true);
-      const token = getAuthToken();
-      let recognized = "";
-      let prediction = "";
-      let score = 0;
-      let isCorrect = false;
-      let cerValue = 1.0;
-      let feedbackMsg = "Unable to process your recording.";
-      let tier: FeedbackTier = "needs_improvement";
-      let geminiSuggestion: string | undefined = undefined;
-      let feedbackAudio: string | undefined = undefined;
+      setEvaluationError(null);
+      setFeedback({
+        isVisible: false,
+        attempt: null,
+        message: t.feedbackNeutral,
+        type: "neutral",
+      });
 
       try {
-        if (token && currentWord.id) {
-          // Primary: send audio to ASR + Gemini endpoint
-          const res = await asrApi.predict(blob, currentWord.id, feedbackLang);
-          recognized = res.prediction_text;
-          prediction = res.prediction_text;
-          score = Math.round(res.accuracy_score);
-          isCorrect = res.is_correct;
-          cerValue = res.cer;
-          feedbackMsg = res.feedback;
-          tier = res.feedback_tier || (isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement");
-          geminiSuggestion = res.gemini_suggestion;
-          feedbackAudio = res.feedback_audio;
-        } else {
-          // Fallback simulation for guest users
-          score = Math.floor(Math.random() * 35) + 65;
-          isCorrect = score >= 80;
-          recognized = isCorrect ? currentWord.word : currentWord.word.slice(0, -1) + "…";
-          prediction = recognized;
-          cerValue = isCorrect ? 0.1 : score >= 50 ? 0.35 : 0.7;
-          tier = isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement";
-          feedbackMsg = isCorrect
-            ? "Excellent! Perfect pronunciation."
-            : score >= 50
-            ? "Good attempt! Listen carefully to the reference audio and try again."
-            : "The pronunciation needs improvement. Listen to the reference audio carefully and try speaking slowly.";
-          const isSentence = practiceMode === "sentence";
-          geminiSuggestion =
-            feedbackLang === "hi"
-              ? isCorrect
-                ? isSentence
-                  ? `विश्लेषण: बहुत बढ़िया! आपने इस पूरे वाक्य '${currentWord.word}' का उच्चारण बहुत स्पष्ट और प्राकृतिक प्रवाह के साथ किया।\n\nजीभ और मुख की स्थिति: शब्दों के बीच विराम और ओष्ठ-संचालन बहुत संतुलित रहा।\n\nअभ्यास सुझाव: इसी तरह अन्य वाक्यों को भी स्वाभाविक गति में बोलने का अभ्यास करते रहें!`
-                  : `विश्लेषण: बहुत बढ़िया! आपने '${currentWord.word}' का उच्चारण बहुत स्पष्ट रूप से किया।\n\nजीभ और मुख की स्थिति: आपकी जीभ और होंठों का तालमेल बिल्कुल सही रहा।\n\nअभ्यास सुझाव: इस शब्द को दिनचर्या के वाक्यों में दोहराते रहें!`
-                : isSentence
-                ? `विश्लेषण: सटीकता ${score}% है। लक्ष्य वाक्य '${currentWord.word}' के स्थान पर '${prediction}' सुनाई दिया।\n\nजीभ और मुख की स्थिति: प्रत्येक शब्द को अलग-अलग स्पष्टता से बोलें और सांस का प्रवाह नियंत्रित रखें।\n\nअभ्यास सुझाव: वाक्य को दो भागों में बांटकर बोलें, फिर पूरे वाक्य का एक साथ अभ्यास करें।`
-                : `विश्लेषण: सटीकता ${score}% है। लक्ष्य '${currentWord.word}' के स्थान पर '${prediction}' सुनाई दिया।\n\nजीभ और मुख की स्थिति: जीभ को तालू के पास रखें और सांस का प्रवाह नियंत्रित रखें।\n\nअभ्यास सुझाव: सही उच्चारण 0.5× गति पर सुनें और प्रत्येक अक्षर को अलग-अलग बोलें।`
-              : isCorrect
-              ? isSentence
-                ? `Analysis: Excellent! You articulated the full sentence '${currentWord.word}' with natural fluency and phonetic clarity.\n\nTongue & Mouth Placement: Smooth transitions between words and steady airflow control were maintained.\n\nPractice Recommendation: Continue practicing conversational Hindi sentences at this steady pace!`
-                : `Analysis: Excellent! You articulated '${currentWord.word}' with clear phoneme accuracy.\n\nTongue & Mouth Placement: Natural airflow and precise tongue coordination were maintained.\n\nPractice Recommendation: Keep repeating this word smoothly in conversational sentences!`
-              : isSentence
-              ? `Analysis: Accuracy is ${score}%. We heard '${prediction}' for target sentence '${currentWord.word}'.\n\nTongue & Mouth Placement: Pace your breath evenly across syllables and enunciate dental and retroflex sounds clearly.\n\nPractice Recommendation: Break the sentence into shorter phrases, practice each, then articulate the whole sentence.`
-              : `Analysis: Accuracy is ${score}%. We heard '${prediction}' for target '${currentWord.word}'.\n\nTongue & Mouth Placement: Focus on resting the tongue tip against the upper palate and releasing air smoothly.\n\nPractice Recommendation: Listen to the correct pronunciation at 0.5× speed, then say each syllable separately.`;
+        if (!getAuthToken()) {
+          throw new Error("Session expired");
         }
-      } catch (err: unknown) {
-        const errMsg = err instanceof Error ? err.message.toLowerCase() : "";
-        const isAuthError =
-          errMsg.includes("unauthorized") ||
-          errMsg.includes("invalid or expired token");
+        const res = await asrApi.predict(blob, currentWord.id, feedbackLang);
+        if (requestId !== requestIdRef.current) return;
 
-        if (isAuthError) {
-          score = 0;
-          isCorrect = false;
-          recognized = "—";
-          prediction = "—";
-          cerValue = 1.0;
-          tier = "needs_improvement";
-          feedbackMsg =
-            lang === "hi"
+        const tier = res.feedback_tier ||
+          (res.is_correct ? "excellent" : res.accuracy_score >= 50 ? "almost_there" : "needs_improvement");
+        const attempt: PronunciationAttempt = {
+          wordId: currentWord.id,
+          recognizedText: res.prediction_text,
+          predictionText: res.prediction_text,
+          expectedText: currentWord.word,
+          score: Math.round(res.accuracy_score),
+          cer: res.cer,
+          isCorrect: res.is_correct,
+          feedbackMessage: res.feedback,
+          feedbackTier: tier,
+          geminiSuggestion: res.gemini_suggestion,
+          feedbackLanguage: feedbackLang,
+          feedbackAudio: res.feedback_audio,
+          timestamp: new Date(),
+          audioBlob: blob,
+        };
+        window.dispatchEvent(new CustomEvent("mitra-result", { detail: { success: tier === "excellent" } }));
+        const type: FeedbackType = tier === "excellent" ? "success" :
+          tier === "almost_there" ? "almostThere" : "needsImprovement";
+        setFeedback({
+          isVisible: true,
+          attempt,
+          message: tier === "excellent" ? t.feedbackCorrect :
+            tier === "almost_there" ? t.feedbackAlmostThere : t.feedbackNeedsImprovement,
+          type,
+        });
+      } catch {
+        if (requestId !== requestIdRef.current) return;
+        const sessionExpired = !getAuthToken();
+        setEvaluationError(
+          sessionExpired
+            ? lang === "hi"
               ? "आपका सत्र समाप्त हो गया है। कृपया पुनः लॉग इन करें।"
-              : "Your session has expired. Please log in again.";
-        } else {
-          try {
-            if (token && currentWord.id) {
-              const fallback = await practiceApi.submit({
-                word_id: currentWord.id,
-                recognized_text: currentWord.word,
-              });
-              recognized = fallback.recognized_text;
-              prediction = fallback.recognized_text;
-              score = Math.round(fallback.accuracy_score);
-              isCorrect = fallback.is_correct;
-              cerValue = isCorrect ? 0.1 : 0.4;
-              tier = isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement";
-              feedbackMsg = isCorrect
-                ? "Great pronunciation!"
-                : score >= 50
-                ? "Keep practicing — try to match the correct pronunciation."
-                : "The pronunciation needs improvement. Try listening to the audio again.";
-            } else {
-              score = Math.floor(Math.random() * 35) + 65;
-              isCorrect = score >= 80;
-              recognized = currentWord.word;
-              prediction = recognized;
-              cerValue = 0.3;
-              tier = isCorrect ? "excellent" : score >= 50 ? "almost_there" : "needs_improvement";
-              feedbackMsg = "Could not connect to ASR service.";
-            }
-          } catch {
-            score = 0;
-            isCorrect = false;
-            recognized = "—";
-            prediction = "—";
-            cerValue = 1.0;
-            tier = "needs_improvement";
-            feedbackMsg = "Could not connect to the server. Please check your connection.";
-          }
-        }
+              : "Your session has expired. Please log in again."
+            : lang === "hi"
+              ? "रिकॉर्डिंग का मूल्यांकन नहीं हो सका। कृपया फिर से रिकॉर्ड करें।"
+              : "We could not evaluate this recording. Please record again."
+        );
+      } finally {
+        if (requestId === requestIdRef.current) setIsEvaluating(false);
       }
-
-      const attempt: PronunciationAttempt = {
-        wordId: currentWord.id,
-        recognizedText: recognized,
-        predictionText: prediction,
-        expectedText: currentWord.word,
-        score,
-        cer: cerValue,
-        isCorrect,
-        feedbackMessage: feedbackMsg,
-        feedbackTier: tier,
-        geminiSuggestion,
-        feedbackLanguage: feedbackLang,
-        feedbackAudio,
-        timestamp: new Date(),
-        audioBlob: blob,
-      };
-
-      const feedbackType: FeedbackType =
-        tier === "excellent"
-          ? "success"
-          : tier === "almost_there"
-          ? "almostThere"
-          : "needsImprovement";
-
-      const headerMsg =
-        tier === "excellent"
-          ? t.feedbackCorrect || "Excellent!"
-          : tier === "almost_there"
-          ? t.feedbackAlmostThere || "Almost there"
-          : t.feedbackNeedsImprovement || "Needs improvement";
-
-      setIsEvaluating(false);
-      setFeedback({
-        isVisible: true,
-        attempt,
-        message: headerMsg,
-        type: feedbackType,
-      });
     },
-    [currentWord, feedbackLang, lang, practiceMode, t]
+    [currentWord, feedbackLang, lang, t]
   );
 
   const handleTryAgain = useCallback(() => {
+    setEvaluationError(null);
     setFeedback({
       isVisible: false,
       attempt: null,
@@ -365,6 +291,8 @@ function PracticeContent() {
   }, [t]);
 
   const handleNextWord = useCallback(() => {
+    if (controlsLocked) return;
+    setEvaluationError(null);
     setFeedback({
       isVisible: false,
       attempt: null,
@@ -372,9 +300,11 @@ function PracticeContent() {
       type: "neutral",
     });
     setCurrentIndex((prev) => (prev + 1) % totalWords);
-  }, [t, totalWords]);
+  }, [controlsLocked, t, totalWords]);
 
   const handlePrevWord = useCallback(() => {
+    if (controlsLocked) return;
+    setEvaluationError(null);
     setFeedback({
       isVisible: false,
       attempt: null,
@@ -382,21 +312,25 @@ function PracticeContent() {
       type: "neutral",
     });
     setCurrentIndex((prev) => (prev - 1 + totalWords) % totalWords);
-  }, [t, totalWords]);
+  }, [controlsLocked, t, totalWords]);
 
   const handleDifficultyChange = useCallback(
     (newDiff: DifficultyFilter) => {
+      if (controlsLocked) return;
+      setEvaluationError(null);
+      setFeedback({ isVisible: false, attempt: null, message: t.feedbackNeutral, type: "neutral" });
       setDifficulty(newDiff);
       if (targetWordId || targetWordText) {
         router.replace("/practice");
       }
     },
-    [router, targetWordId, targetWordText]
+    [controlsLocked, router, t, targetWordId, targetWordText]
   );
 
   const handlePracticeModeChange = useCallback(
     (newMode: "word" | "sentence") => {
-      if (newMode === practiceMode) return;
+      if (controlsLocked || newMode === practiceMode) return;
+      setEvaluationError(null);
       setPracticeMode(newMode);
       setCurrentIndex(0);
       setFeedback({
@@ -409,7 +343,7 @@ function PracticeContent() {
         router.replace("/practice");
       }
     },
-    [practiceMode, router, t, targetWordId, targetWordText]
+    [controlsLocked, practiceMode, router, t, targetWordId, targetWordText]
   );
 
   return (
@@ -427,6 +361,7 @@ function PracticeContent() {
               <button
                 type="button"
                 onClick={() => handlePracticeModeChange("word")}
+                disabled={controlsLocked}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                   practiceMode === "word"
                     ? "bg-zinc-900 text-white shadow-xs"
@@ -446,6 +381,7 @@ function PracticeContent() {
               <button
                 type="button"
                 onClick={() => handlePracticeModeChange("sentence")}
+                disabled={controlsLocked}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                   practiceMode === "sentence"
                     ? "bg-zinc-900 text-white shadow-xs"
@@ -489,6 +425,7 @@ function PracticeContent() {
             </div>
             <button
               onClick={() => router.replace("/practice")}
+                disabled={controlsLocked}
               className="shrink-0 text-xs font-semibold text-amber-800 hover:text-amber-950 bg-amber-100/60 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors"
             >
               {lang === "hi" ? "मिश्रित शब्द देखें ✕" : "View all ✕"}
@@ -515,6 +452,7 @@ function PracticeContent() {
                   <button
                     key={tab.key}
                     onClick={() => handleDifficultyChange(tab.key as DifficultyFilter)}
+                disabled={controlsLocked}
                     className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-medium transition-all ${
                       active
                         ? "bg-white text-zinc-900 shadow-sm font-semibold border border-stone-200/50"
@@ -558,16 +496,23 @@ function PracticeContent() {
             <div className="py-2">
               <MicRecorder
                 onRecordingComplete={handleRecordingComplete}
+                onRecordingStateChange={setIsRecording}
                 disabled={feedback.isVisible || isLoadingWords || isEvaluating}
                 isProcessing={isEvaluating}
               />
             </div>
 
+            {evaluationError && (
+              <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                {evaluationError}
+              </div>
+            )}
+
             {/* Left Side Navigation Controls */}
             <div className="flex justify-between items-center border-t border-line pt-4 mt-2">
               <button
                 onClick={handlePrevWord}
-                disabled={totalWords <= 1}
+                disabled={controlsLocked || totalWords <= 1}
                 className="px-4 py-2 rounded-full text-xs sm:text-sm font-medium text-ink-soft border border-line bg-white hover:border-stone-strong hover:text-ink transition-colors duration-150 disabled:opacity-50"
               >
                 <span aria-hidden>←</span>{" "}
@@ -579,7 +524,7 @@ function PracticeContent() {
               </button>
               <button
                 onClick={handleNextWord}
-                disabled={totalWords <= 1}
+                disabled={controlsLocked || totalWords <= 1}
                 className="px-4 py-2 rounded-full text-xs sm:text-sm font-medium text-ink-soft border border-line bg-white hover:border-stone-strong hover:text-ink transition-colors duration-150 disabled:opacity-50"
               >
                 {practiceMode === "sentence"
@@ -663,7 +608,7 @@ function PracticeContent() {
                 <div className="animate-fade-in">
                   <FeedbackPanel
                     feedback={feedback}
-                    expectedWord={currentWord.word}
+                    expectedWord={feedback.attempt?.expectedText || currentWord.word}
                     onTryAgain={handleTryAgain}
                     onNextWord={handleNextWord}
                     feedbackLanguage={feedbackLang}
@@ -713,3 +658,4 @@ function PracticeContent() {
     </div>
   );
 }
+
