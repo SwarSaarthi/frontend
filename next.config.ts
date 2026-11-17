@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: [],
-  },
+  }, 
   // Proxy API requests to backend — keeps backend URL private and avoids browser CORS
   async rewrites() {
     const target = (
