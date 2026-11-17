@@ -13,6 +13,26 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: [],
   },
+  // Proxy API requests to backend — keeps backend URL private and avoids browser CORS
+  async rewrites() {
+    const target = (
+      process.env.BACKEND_URL ||
+      process.env.API_PROXY_TARGET ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://rajharsh11-swarsaarthi-backend.hf.space"
+    ).replace(/\/$/, "");
+
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${target}/api/:path*`,
+      },
+      {
+        source: "/backend/:path*",
+        destination: `${target}/:path*`,
+      },
+    ];
+  },
   // Cache static assets (fonts, images) aggressively — reduces repeat fetch
   async headers() {
     return [

@@ -6,7 +6,7 @@
  * pronunciation submission, streak tracking, and user profile.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
 // ── Auth Token Helpers ──────────────────────────────────────────
 export function getAuthToken(): string | null {
