@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
   // No external Google font fetch at runtime — next/font self-hosts.
   // Keep images local, modern formats save ~30% payload.
   images: {
-    qualities: [75, 80, 85],
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [16, 32, 48, 64, 96],

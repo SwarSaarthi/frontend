@@ -7,14 +7,12 @@ import type { RecordingState } from "@/types";
 
 interface MicRecorderProps {
   onRecordingComplete: (blob: Blob) => void;
-  onRecordingStateChange?: (isRecording: boolean) => void;
   disabled?: boolean;
   isProcessing?: boolean;
 }
 
 function MicRecorderInner({
   onRecordingComplete,
-  onRecordingStateChange,
   disabled = false,
   isProcessing: externalProcessing = false,
 }: MicRecorderProps) {
@@ -39,13 +37,11 @@ function MicRecorderInner({
     setVolume(0);
     setHasDetectedSound(false);
     setRecordingState("recording");
-    onRecordingStateChange?.(true);
 
     const recorder = new AudioRecorder({
       onStatusChange: (status) => {
         if (status === "error") {
           setRecordingState("idle");
-          onRecordingStateChange?.(false);
           if (timerRef.current) clearInterval(timerRef.current);
         }
       },
@@ -58,8 +54,7 @@ function MicRecorderInner({
       onDataAvailable: (blob) => {
         setRecordingState("processing");
         onRecordingComplete(blob);
-        onRecordingStateChange?.(false);
-        setRecordingState("done");
+        setTimeout(() => setRecordingState("done"), 500);
       },
       onError: (error) => {
         console.error("Recording error:", error);
@@ -68,24 +63,16 @@ function MicRecorderInner({
     });
     recorderRef.current = recorder;
     await recorder.startRecording();
-    if (recorder.status === "recording") {
-      timerRef.current = setInterval(() => setDuration((d) => d + 1), 1000);
-    }
-  }, [disabled, externalProcessing, onRecordingComplete, onRecordingStateChange]);
+    timerRef.current = setInterval(() => setDuration((d) => d + 1), 1000);
+  }, [disabled, externalProcessing, onRecordingComplete]);
 
   const stopRecording = useCallback(() => {
-    if (recorderRef.current?.status === "requesting") {
-      recorderRef.current.destroy();
-      setRecordingState("idle");
-      onRecordingStateChange?.(false);
-    } else {
-      recorderRef.current?.stopRecording();
-    }
+    recorderRef.current?.stopRecording();
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-  }, [onRecordingStateChange]);
+  }, []);
 
   const handleMicClick = useCallback(() => {
     primeAudioPlayback();

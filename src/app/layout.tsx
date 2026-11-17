@@ -2,7 +2,7 @@
  * SwarSaarthi — Root Layout
  *
  * Sets up:
- *  - Local Plus Jakarta Sans (UI) + Noto Sans Devanagari (Hindi text)
+ *  - Google Fonts:Plus Jakarta Sans (UI) + Noto Sans Devanagari (Hindi text)
  *  - Local Quicksand variable font for the main brand look
  *  - LanguageProvider for bilingual support
  *  - Navbar + Footer shared across all pages
@@ -12,10 +12,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import localFont from "next/font/local";
+import { Noto_Sans_Devanagari, Plus_Jakarta_Sans } from "next/font/google";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
-import RobotCompanion from "@/components/RobotCompanion";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 import "./globals.css";
@@ -34,21 +34,20 @@ const quicksand = localFont({
   variable: "--font-quicksand",
 });
 
-// Bundle fonts locally so development and production builds also work offline.
-const plusJakarta = localFont({
-  src: "../../fonts/PlusJakartaSans-Variable.ttf",
+const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
-  weight: "400 800",
-  style: "normal",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
   preload: true,
 });
 
-const notoDevanagari = localFont({
-  src: "../../fonts/NotoSansDevanagari-Variable.ttf",
+// Noto Devanagari — only 400 + 600 needed (body + heading). 500/700 removed
+// to halve Google font payload; next/font self-hosts so no runtime CDN hit.
+const notoDevanagari = Noto_Sans_Devanagari({
   variable: "--font-noto-sans-devanagari",
-  weight: "400 600",
-  style: "normal",
+  subsets: ["devanagari"],
+  weight: ["400", "600"],
   display: "swap",
   preload: false,
 });
@@ -85,11 +84,9 @@ export default function RootLayout({
               <PageTransition>{children}</PageTransition>
             </main>
             <Footer />
-            <RobotCompanion />
           </AuthProvider>
         </LanguageProvider>
       </body>
     </html>
   );
 }
-

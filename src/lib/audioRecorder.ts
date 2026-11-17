@@ -1,4 +1,3 @@
-import { companionAudio, notifyCompanion } from "./companion";
 /**
  * SwarSaarthi — Audio Recorder Utility
  *
@@ -46,7 +45,6 @@ export class AudioRecorder {
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private volumeIntervalId: ReturnType<typeof setInterval> | null = null;
-  private disposed = false;
 
   constructor(callbacks: RecorderCallbacks = {}) {
     this.callbacks = callbacks;
@@ -87,24 +85,18 @@ export class AudioRecorder {
    * The browser will prompt the user for permission on first call.
    */
   async startRecording(): Promise<void> {
-    if (this.disposed) return;
     try {
       this.setStatus("requesting");
       this.audioChunks = [];
 
       // Request mic access with clean settings (no sampleRate constraint, allow hardware rate)
-      const stream = await navigator.mediaDevices.getUserMedia({
+      this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
           noiseSuppression: false,
           autoGainControl: true,
         },
       });
-      if (this.disposed) {
-        stream.getTracks().forEach((track) => track.stop());
-        return;
-      }
-      this.stream = stream;
 
       // Set up real-time volume analysis if callback is provided
       this.setupVolumeAnalysis(this.stream);
@@ -145,8 +137,6 @@ export class AudioRecorder {
       this.startTime = Date.now();
       this.setStatus("recording");
     } catch (error) {
-      if (this.disposed) return;
-      this.releaseStream();
       this.setStatus("error");
       const err =
         error instanceof Error
@@ -229,21 +219,11 @@ export class AudioRecorder {
   /** Update status and notify callback */
   private setStatus(status: RecorderStatus): void {
     this._status = status;
-    notifyCompanion("listening", status === "recording");
     this.callbacks.onStatusChange?.(status);
   }
 
   /** Clean up resources */
   destroy(): void {
-    this.disposed = true;
-    notifyCompanion("listening", false);
-    this._status = "idle";
-    this.callbacks = {};
-    if (this.mediaRecorder) {
-      this.mediaRecorder.ondataavailable = null;
-      this.mediaRecorder.onstop = null;
-      this.mediaRecorder.onerror = null;
-    }
     this.stopRecording();
     this.releaseStream();
     this.mediaRecorder = null;
@@ -263,7 +243,7 @@ export function primeAudioPlayback(): void {
   if (typeof window === "undefined") return;
   try {
     if (!_sharedAudioElement) {
-      _sharedAudioElement = companionAudio();
+      _sharedAudioElement = new Audio();
     }
     // Silent 1-sample WAV to prime the audio element within user interaction
     _sharedAudioElement.src =
@@ -315,7 +295,7 @@ export async function playDirectAudio(audioSrc: string): Promise<void> {
 
   return new Promise<void>((resolve, reject) => {
     if (!_sharedAudioElement) {
-      _sharedAudioElement = companionAudio();
+      _sharedAudioElement = new Audio();
     }
     const audio = _sharedAudioElement;
     _activeAudioElement = audio;
@@ -422,7 +402,7 @@ export async function playFastTts(
 
     await new Promise<void>((resolve, reject) => {
       if (!_sharedAudioElement) {
-        _sharedAudioElement = companionAudio();
+        _sharedAudioElement = new Audio();
       }
       const audio = _sharedAudioElement;
       _activeAudioElement = audio;
@@ -594,4 +574,3 @@ export function speakFeedback(
     onEnd: callbacks?.onEnd,
   });
 }
-

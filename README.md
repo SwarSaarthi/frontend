@@ -1,23 +1,5 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Validation
-
-Use `npm ci` to install the dependencies from `package-lock.json`, then run:
-
-```bash
-npm test
-npm run typecheck
-npm run lint
-npm run build
-```
-
-The regression tests cover failed speech evaluation, target changes during an
-attempt, late responses, microphone cleanup, and real empty/error profile states.
-They mock backend responses and do not require microphone access or speech models.
-
-The production build uses Next.js's Webpack option because Turbopack's CSS worker
-fails to start reliably on this Windows setup. Development still uses `next dev`.
-
 ## Getting Started
 
 First, run the development server:
@@ -36,9 +18,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project bundles Quicksand, Plus Jakarta Sans, and Noto Sans Devanagari in
-`fonts/` and loads them with `next/font/local`. No Google Fonts download is needed
-when starting or building the frontend. Font sources and licenses are in `fonts/SOURCES.md`.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
 
