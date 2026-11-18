@@ -50,7 +50,7 @@ function NavbarInner() {
           <Link href="/" className="flex items-center gap-3">
             <span className="w-14 h-14 overflow-hidden flex items-center justify-center">
               <Image
-                src="/swarSaarthi.png"
+                src="/swarsaarthi.png"
                 alt="SwarSaarthi"
                 height={60}
                 width={60}

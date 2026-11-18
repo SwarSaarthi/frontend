@@ -17,6 +17,8 @@
  *      const { transcribedText } = await response.json();
  */
 
+import { API_BASE_URL } from "./api";
+
 export type RecorderStatus =
   | "idle"
   | "requesting"
@@ -369,7 +371,7 @@ export async function playFastTts(
 
   stopSpeaking();
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const baseUrl = API_BASE_URL;
   let audioUrl = "";
   let objectUrlToRevoke: string | null = null;
 
