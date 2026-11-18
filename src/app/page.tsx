@@ -617,6 +617,337 @@ const PHONETIC_SPECIMENS = [
 ];
 
 /* ============================================================
+   EMPATHY & ANIMATED SPECIMEN ACCENTS
+   ============================================================ */
+
+function EmpathyCalmRipple() {
+  return (
+    <svg className="w-5 h-5 text-[#a24b38]" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="3" fill="currentColor" />
+      <motion.circle
+        cx="12"
+        cy="12"
+        r="7.5"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        animate={{ scale: [0.8, 1.25, 0.8], opacity: [0.8, 0.25, 0.8] }}
+        transition={{ duration: 2.8, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+      />
+    </svg>
+  );
+}
+
+function EmpathyAcousticWave() {
+  return (
+    <div className="flex items-center gap-0.5 h-4">
+      {[4, 11, 7].map((h, i) => (
+        <motion.span
+          key={i}
+          className="w-1 bg-[#3d5f78] rounded-full"
+          animate={{ height: ["3px", `${h}px`, "3px"] }}
+          transition={{
+            duration: 1.2 + i * 0.2,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: [0.22, 1, 0.36, 1],
+            delay: i * 0.15,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function EmpathyGrowthPulse() {
+  return (
+    <svg className="w-5 h-5 text-[#3f6a4a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <motion.path
+        d="M12 21V11M12 11C12 7 8 5 4 5C4 9 7 12 12 12M12 11C12 7 16 5 20 5C20 9 17 12 12 12"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        animate={{ pathLength: [0.85, 1, 0.85], opacity: [0.75, 1, 0.75] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+      />
+    </svg>
+  );
+}
+
+const VOCAL_TRACT_DATA: Record<
+  string,
+  {
+    tonguePath: string;
+    targetPoint: { cx: number; cy: number };
+    labelEn: string;
+    labelHi: string;
+  }
+> = {
+  dental: {
+    tonguePath: "M 20 48 C 24 38, 28 22, 38 21 C 52 24, 85 36, 120 40 L 155 48",
+    targetPoint: { cx: 38, cy: 21 },
+    labelEn: "Dental Touch (Teeth Contact)",
+    labelHi: "दन्त स्पर्श (अग्र दन्त)",
+  },
+  retroflex: {
+    tonguePath: "M 20 48 C 32 44, 48 34, 62 16 C 70 18, 86 34, 122 40 L 155 48",
+    targetPoint: { cx: 62, cy: 16 },
+    labelEn: "Retroflex Curling (Hard Palate)",
+    labelHi: "मूर्धा संस्पर्श (कठोर तालू)",
+  },
+  bilabial: {
+    tonguePath: "M 20 48 C 38 42, 68 40, 95 40 C 122 40, 140 44, 155 48",
+    targetPoint: { cx: 16, cy: 26 },
+    labelEn: "Bilabial Closure (Lips Sealed)",
+    labelHi: "ओष्ठ संपीड़न (द्विओष्ठ)",
+  },
+  palatal: {
+    tonguePath: "M 20 48 C 42 42, 64 24, 82 17 C 102 22, 126 36, 155 48",
+    targetPoint: { cx: 82, cy: 17 },
+    labelEn: "Palatal Arch (Roof Elevation)",
+    labelHi: "तालु संस्पर्श (मध्य तालू)",
+  },
+  velar: {
+    tonguePath: "M 20 48 C 42 45, 75 42, 95 34 C 112 26, 122 17, 142 22 L 155 48",
+    targetPoint: { cx: 122, cy: 17 },
+    labelEn: "Velar Closure (Soft Palate)",
+    labelHi: "कण्ठ नाद (कोमल तालू)",
+  },
+};
+
+function VocalTractIllustration({
+  specimenKey,
+  accent,
+}: {
+  specimenKey: string;
+  accent: string;
+}) {
+  const { lang } = useLanguage();
+  const data = VOCAL_TRACT_DATA[specimenKey] || VOCAL_TRACT_DATA.dental;
+
+  return (
+    <div className="rounded-2xl bg-stone-50 border border-stone-200/70 p-3.5 mb-4">
+      <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-500 mb-2">
+        <span className="uppercase tracking-wider">
+          {lang === "hi"
+            ? "गतिक मुख-विवर एवं जिह्वा स्थिति"
+            : "Dynamic Vocal Tract Kinematics"}
+        </span>
+        <span className="font-bold font-hindi" style={{ color: accent }}>
+          {lang === "hi" ? data.labelHi : data.labelEn}
+        </span>
+      </div>
+
+      <div className="relative w-full h-22 sm:h-24 flex items-center justify-center overflow-hidden">
+        <svg className="w-full max-w-xs h-full" viewBox="0 0 170 56" fill="none">
+          {/* Static Anatomy: Hard Palate & Soft Palate Roof */}
+          <path
+            d="M 16 16 C 26 13, 50 11, 80 13 C 110 15, 134 21, 155 34"
+            stroke="#a8a29e"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+          {/* Incisors / Teeth marker */}
+          <path d="M 28 15 L 28 22" stroke="#78716c" strokeWidth="2.5" strokeLinecap="round" />
+
+          {/* Morphing Dynamic Tongue Contour */}
+          <motion.path
+            d={data.tonguePath}
+            stroke={accent}
+            strokeWidth="3"
+            strokeLinecap="round"
+            fill={accent}
+            fillOpacity={0.16}
+            animate={{ d: data.tonguePath }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          />
+
+          {/* Dynamic Articulatory Target Indicator */}
+          <motion.circle
+            cx={data.targetPoint.cx}
+            cy={data.targetPoint.cy}
+            r="4.5"
+            fill={accent}
+            animate={{
+              cx: data.targetPoint.cx,
+              cy: data.targetPoint.cy,
+              scale: [1, 1.25, 1],
+            }}
+            transition={{
+              duration: 1.8,
+              repeat: Infinity,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          />
+          <motion.circle
+            cx={data.targetPoint.cx}
+            cy={data.targetPoint.cy}
+            r="8"
+            stroke={accent}
+            strokeWidth="1"
+            strokeDasharray="2 2"
+            animate={{
+              cx: data.targetPoint.cx,
+              cy: data.targetPoint.cy,
+              scale: [0.9, 1.4, 0.9],
+              opacity: [0.7, 0.2, 0.7],
+            }}
+            transition={{
+              duration: 1.8,
+              repeat: Infinity,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   PILLAR & BENTO ANIMATED SVG DIAGRAMS
+   ============================================================ */
+
+function MotorMirroringDiagram() {
+  return (
+    <div className="h-10 w-full mb-3 rounded-xl bg-[#c45c3e]/5 border border-[#c45c3e]/15 flex items-center justify-center overflow-hidden px-3">
+      <svg className="w-full h-8" viewBox="0 0 160 32" fill="none">
+        <motion.path
+          d="M 10 16 Q 40 4, 80 16 T 150 16"
+          stroke="#c45c3e"
+          strokeWidth="1.8"
+          fill="none"
+          strokeLinecap="round"
+          animate={{
+            d: [
+              "M 10 16 Q 40 4, 80 16 T 150 16",
+              "M 10 16 Q 40 28, 80 16 T 150 16",
+              "M 10 16 Q 40 4, 80 16 T 150 16",
+            ],
+          }}
+          transition={{ duration: 3.2, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+        />
+        <motion.path
+          d="M 10 16 Q 40 28, 80 16 T 150 16"
+          stroke="#c45c3e"
+          strokeWidth="1.2"
+          strokeDasharray="3 3"
+          strokeOpacity={0.6}
+          fill="none"
+          strokeLinecap="round"
+          animate={{
+            d: [
+              "M 10 16 Q 40 28, 80 16 T 150 16",
+              "M 10 16 Q 40 4, 80 16 T 150 16",
+              "M 10 16 Q 40 28, 80 16 T 150 16",
+            ],
+          }}
+          transition={{ duration: 3.2, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </svg>
+    </div>
+  );
+}
+
+function NoiseFilterDiagram() {
+  return (
+    <div className="h-10 w-full mb-3 rounded-xl bg-[#3f6f5c]/5 border border-[#3f6f5c]/15 flex items-center justify-center overflow-hidden px-3">
+      <svg className="w-full h-8" viewBox="0 0 160 32" fill="none">
+        <path
+          d="M 10 26 L 45 26 Q 80 2, 115 26 L 150 26"
+          stroke="#3f6f5c"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        <motion.line
+          x1="80"
+          y1="4"
+          x2="80"
+          y2="28"
+          stroke="#3f6f5c"
+          strokeWidth="1.5"
+          strokeDasharray="2 2"
+          animate={{ x1: [55, 105, 55], x2: [55, 105, 55] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+        />
+        <circle cx="80" cy="14" r="2.5" fill="#3f6f5c" />
+      </svg>
+    </div>
+  );
+}
+
+function AnatomicalTargetDiagram() {
+  return (
+    <div className="h-10 w-full mb-3 rounded-xl bg-[#b8862a]/5 border border-[#b8862a]/15 flex items-center justify-center overflow-hidden px-3">
+      <svg className="w-full h-8" viewBox="0 0 160 32" fill="none">
+        <line x1="20" y1="16" x2="140" y2="16" stroke="#b8862a" strokeWidth="1" strokeOpacity={0.4} />
+        <line x1="80" y1="4" x2="80" y2="28" stroke="#b8862a" strokeWidth="1" strokeOpacity={0.4} />
+        <circle cx="80" cy="16" r="10" stroke="#b8862a" strokeWidth="1.2" strokeDasharray="3 3" />
+        <motion.circle
+          cx="80"
+          cy="16"
+          r="5"
+          stroke="#b8862a"
+          strokeWidth="1.8"
+          fill="#b8862a"
+          fillOpacity={0.2}
+          animate={{ scale: [0.8, 1.25, 0.8] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </svg>
+    </div>
+  );
+}
+
+function AnimatedLipSpreadContour() {
+  return (
+    <div className="flex items-center justify-center my-3 py-1.5 bg-stone-50/80 rounded-2xl border border-stone-200/50">
+      <svg className="w-44 h-9" viewBox="0 0 160 36" fill="none">
+        <motion.path
+          d="M 25 18 C 50 14, 70 12, 80 14 C 90 12, 110 14, 135 18"
+          stroke="#c45c3e"
+          strokeWidth="2"
+          strokeLinecap="round"
+          animate={{
+            d: [
+              "M 25 18 C 50 15, 70 13, 80 15 C 90 13, 110 15, 135 18",
+              "M 15 18 C 45 11, 70 9, 80 11 C 90 9, 115 11, 145 18",
+              "M 25 18 C 50 15, 70 13, 80 15 C 90 13, 110 15, 135 18",
+            ],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+        />
+        <motion.path
+          d="M 25 18 C 50 24, 70 26, 80 26 C 90 26, 110 24, 135 18"
+          stroke="#c45c3e"
+          strokeWidth="2"
+          strokeLinecap="round"
+          animate={{
+            d: [
+              "M 25 18 C 50 22, 70 24, 80 24 C 90 24, 110 22, 135 18",
+              "M 15 18 C 45 27, 70 29, 80 29 C 90 29, 115 27, 145 18",
+              "M 25 18 C 50 22, 70 24, 80 24 C 90 24, 110 22, 135 18",
+            ],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+        />
+        <motion.ellipse
+          cx="80"
+          cy="19"
+          rx="18"
+          ry="3.5"
+          fill="#c45c3e"
+          fillOpacity={0.14}
+          animate={{
+            rx: [14, 24, 14],
+            ry: [2.5, 5, 2.5],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </svg>
+    </div>
+  );
+}
+
+/* ============================================================
    REAL THERAPY PIPELINE DEMO PANELS
    Authentic representations of SwarSaarthi's actual 3-stage flow
    ============================================================ */
@@ -680,8 +1011,78 @@ function ObservationPipelineDemo({
           </div>
         </div>
 
+        {/* Animated SVG lip-sync & soundwave graphic whose pulse rate responds to selected speed */}
+        <div className="mt-4 pt-3 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <svg className="w-7 h-7 text-[#c45c3e]" viewBox="0 0 28 28" fill="none">
+              <motion.path
+                d="M4 14 C 9 9, 19 9, 24 14 C 19 19, 9 19, 4 14 Z"
+                fill="currentColor"
+                fillOpacity={0.15}
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                animate={{
+                  d: [
+                    "M4 14 C 9 11, 19 11, 24 14 C 19 17, 9 17, 4 14 Z",
+                    "M4 14 C 9 7, 19 7, 24 14 C 19 21, 9 21, 4 14 Z",
+                    "M4 14 C 9 11, 19 11, 24 14 C 19 17, 9 17, 4 14 Z",
+                  ],
+                }}
+                transition={{
+                  duration: 1.2 / speed,
+                  repeat: Infinity,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+              />
+              <motion.ellipse
+                cx="14"
+                cy="14"
+                rx="4.5"
+                ry="2"
+                fill="#c45c3e"
+                animate={{
+                  ry: [1.5, 3.5, 1.5],
+                }}
+                transition={{
+                  duration: 1.2 / speed,
+                  repeat: Infinity,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+              />
+            </svg>
+            <div className="flex items-center gap-1 h-6">
+              {[0.3, 0.75, 1.0, 0.6, 0.85, 0.45, 0.9, 0.5].map((scale, i) => (
+                <motion.span
+                  key={i}
+                  className="w-1 bg-[#c45c3e] rounded-full"
+                  animate={{
+                    height: ["3px", `${Math.round(scale * 20)}px`, "3px"],
+                  }}
+                  transition={{
+                    duration: (1.2 / speed) * 0.75,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                    ease: [0.22, 1, 0.36, 1],
+                    delay: ((i * 0.07) / speed) % 0.4,
+                  }}
+                />
+              ))}
+            </div>
+            <span className="text-[11px] font-semibold text-zinc-600">
+              {lang === "hi"
+                ? `ओष्ठ समकालन (${speed}× गति)`
+                : `Lip-Sync & Wave (${speed}× cadence)`}
+            </span>
+          </div>
+
+          <div className="text-[10px] text-zinc-500 font-mono bg-stone-50 px-2.5 py-1 rounded-lg border border-stone-200/50">
+            Kinematic Frame Rate: 60fps
+          </div>
+        </div>
+
         {/* Live Gauges */}
-        <div className="mt-4 pt-4 border-t border-stone-100 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+        <div className="mt-3.5 pt-3 border-t border-stone-100 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
           <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200/60">
             <span className="text-[10px] text-zinc-500 block font-medium">
               {lang === "hi" ? "ओष्ठ विवर" : "Lip Parting"}
@@ -710,14 +1111,7 @@ function ObservationPipelineDemo({
 
 function DspRecordingPipelineDemo() {
   const { lang } = useLanguage();
-  const [bars, setBars] = useState([8, 14, 22, 12, 28, 18, 24, 15, 10, 19, 14, 6]);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setBars(Array.from({ length: 12 }, () => 6 + Math.random() * 26));
-    }, 120);
-    return () => clearInterval(id);
-  }, []);
+  const sinusoidalWaveBars = [10, 16, 26, 36, 44, 38, 28, 22, 34, 42, 30, 20, 14, 8];
 
   return (
     <div className="text-left space-y-4">
@@ -757,15 +1151,28 @@ function DspRecordingPipelineDemo() {
           </div>
         </div>
 
-        {/* Live Frequency Bars */}
-        <div className="h-14 flex items-end justify-center gap-1.5 py-2 bg-stone-50 rounded-xl border border-stone-200/60 px-4">
-          {bars.map((h, i) => (
-            <span
-              key={i}
-              className="w-1.5 rounded-full bg-[#3f6f5c] transition-all duration-100"
-              style={{ height: `${h}px` }}
-            />
-          ))}
+        {/* Calm Continuous Sinusoidal Wave Animation (No Frantic Math.random()) */}
+        <div className="h-16 flex items-end justify-center gap-1.5 py-2.5 bg-stone-50 rounded-xl border border-stone-200/60 px-4">
+          {sinusoidalWaveBars.map((baseH, i) => {
+            const minH = Math.max(6, Math.round(baseH * 0.35));
+            const maxH = Math.min(50, Math.round(baseH * 1.15));
+            return (
+              <motion.span
+                key={i}
+                className="w-1.5 rounded-full bg-[#3f6f5c]"
+                animate={{
+                  height: [`${minH}px`, `${maxH}px`, `${minH}px`],
+                  opacity: [0.75, 1, 0.75],
+                }}
+                transition={{
+                  duration: 1.8 + Math.sin(i * 0.6) * 0.35,
+                  repeat: Infinity,
+                  ease: [0.22, 1, 0.36, 1],
+                  delay: i * 0.08,
+                }}
+              />
+            );
+          })}
         </div>
 
         <div className="mt-3.5 flex items-center justify-between text-xs text-zinc-600 bg-stone-50 p-2.5 rounded-xl border border-stone-200/60">
@@ -783,6 +1190,28 @@ function DspRecordingPipelineDemo() {
 
 function MitraGuidancePipelineDemo() {
   const { lang } = useLanguage();
+  const radius = 17;
+  const circumference = 2 * Math.PI * radius;
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.12,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -8 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.4, ease: "easeOut" as const },
+    },
+  };
+
   return (
     <div className="text-left space-y-4">
       {/* Top Header */}
@@ -795,17 +1224,51 @@ function MitraGuidancePipelineDemo() {
               : "Mitra AI Clinical Articulation Diagnosis"}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-amber-900 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+        {/* Animated Circular SVG Accuracy Ring */}
+        <div className="flex items-center gap-2.5 bg-amber-50/80 px-2.5 py-1 rounded-full border border-amber-200">
+          <div className="relative w-8 h-8 flex items-center justify-center">
+            <svg className="w-8 h-8 -rotate-90" viewBox="0 0 40 40">
+              <circle
+                cx="20"
+                cy="20"
+                r={radius}
+                fill="none"
+                stroke="#fef3c7"
+                strokeWidth="3"
+              />
+              <motion.circle
+                cx="20"
+                cy="20"
+                r={radius}
+                fill="none"
+                stroke="#b8862a"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                initial={{ strokeDashoffset: circumference }}
+                animate={{ strokeDashoffset: circumference * (1 - 0.96) }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </svg>
+            <span className="absolute text-[9px] font-black text-amber-900">
+              96%
+            </span>
+          </div>
+          <span className="text-[10px] font-bold text-amber-900 pr-1">
             CER: 0.04 • 96% Match
           </span>
         </div>
       </div>
 
-      {/* Authentic Clinical Mitra Card */}
-      <div className="rounded-2xl border border-stone-200/90 bg-white/95 p-4 sm:p-5 shadow-2xs space-y-3">
+      {/* Authentic Clinical Mitra Card with Staggered Reveal */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="rounded-2xl border border-stone-200/90 bg-white/95 p-4 sm:p-5 shadow-2xs space-y-3"
+      >
         {/* Analysis Item */}
-        <div>
+        <motion.div variants={itemVariants}>
           <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#a24b38] mb-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[#c45c3e]" />
             <span>{lang === "hi" ? "विश्लेषण (Analysis)" : "Phonetic Analysis"}</span>
@@ -815,10 +1278,10 @@ function MitraGuidancePipelineDemo() {
               ? "उत्कृष्ट! आपने 'त' और 'स' का उच्चारण सटीक जिह्वा-तालू समन्वय के साथ किया।"
               : "Excellent! Dental consonants articulated with precise phoneme clarity."}
           </p>
-        </div>
+        </motion.div>
 
         {/* Tongue & Mouth Placement Item */}
-        <div>
+        <motion.div variants={itemVariants}>
           <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#3f6f5c] mb-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[#3f6f5c]" />
             <span>
@@ -832,10 +1295,10 @@ function MitraGuidancePipelineDemo() {
               ? "जीभ के सिरे को ऊपरी दांतों के पिछले सिरे से स्पर्श करें और सांस का प्रवाह सुचारु रखें।"
               : "Rest the tongue tip against the upper incisors and maintain steady, unblocked airflow."}
           </p>
-        </div>
+        </motion.div>
 
         {/* Practice Tip Item */}
-        <div>
+        <motion.div variants={itemVariants}>
           <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#b8862a] mb-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[#b8862a]" />
             <span>
@@ -849,9 +1312,110 @@ function MitraGuidancePipelineDemo() {
               ? "इसी गति में वाक्य को 3 बार दोहराकर प्राकृतिक प्रवाह और आत्मविश्वास बढ़ाएं।"
               : "Repeat this utterance 3 times at normal pace to solidify muscle memory."}
           </p>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ============================================================
+   "BEFORE YOU BEGIN." FAQ SECTION (EDITORIAL 2-COLUMN ACCORDION)
+   ============================================================ */
+
+function FaqSection() {
+  const { t } = useLanguage();
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  const faqItems = [
+    { num: "01", q: t.faq1Q, a: t.faq1A },
+    { num: "02", q: t.faq2Q, a: t.faq2A },
+    { num: "03", q: t.faq3Q, a: t.faq3A },
+    { num: "04", q: t.faq4Q, a: t.faq4A },
+  ];
+
+  return (
+    <section className="bg-[#f2efe9] px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid gap-12 lg:grid-cols-[0.85fr_1.35fr] lg:gap-20 items-start">
+          {/* Left Column (Editorial Header) */}
+          <div>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-moss mb-5 block">
+              {t.faqEyebrow}
+            </span>
+            <h2 className="leading-[1.08] tracking-tight">
+              <span className="block text-4xl sm:text-5xl lg:text-[3.5rem] font-normal tracking-tight text-[#1e3329] leading-[1.08]">
+                {t.faqTitleLine1}
+              </span>
+              <span className="block font-serif italic font-normal text-4xl sm:text-5xl lg:text-[3.5rem] text-[#1e3329] leading-[1.08] mt-1">
+                {t.faqTitleLine2}
+              </span>
+            </h2>
+            <p className="mt-6 text-sm sm:text-base text-[#6e7771] font-normal leading-relaxed">
+              {t.faqSubtitle}
+            </p>
+          </div>
+
+          {/* Right Column (Minimalist Hairline-Divided Accordion List — NO Boxed Cards) */}
+          <div className="border-t border-b border-[#dcd6cc] divide-y divide-[#dcd6cc]">
+            {faqItems.map((item, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div key={item.num} className="transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    className="w-full py-6 sm:py-7 flex items-center justify-between gap-6 text-left group cursor-pointer"
+                    aria-expanded={isOpen}
+                  >
+                    <span className="text-xs font-normal text-[#8c948e] w-8 shrink-0 tabular-nums">
+                      {item.num}
+                    </span>
+                    <span className="flex-1 text-base sm:text-[18px] font-normal text-[#1e3329] group-hover:text-[#c45c3e] transition-colors leading-snug">
+                      {item.q}
+                    </span>
+                    <span className="shrink-0 text-[#1e3329] transition-transform duration-300 ease-out">
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-300 ${
+                          isOpen ? "rotate-45" : ""
+                        }`}
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="8" y1="2" x2="8" y2="14" />
+                        <line x1="2" y1="8" x2="14" y2="8" />
+                      </svg>
+                    </span>
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        key="content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-8 pr-6 pb-7 pt-1">
+                          <p className="text-sm sm:text-[15px] leading-7 text-[#656d68] max-w-2xl font-normal">
+                            {item.a}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -962,6 +1526,30 @@ export default function Home() {
 
   const [activeSpecimen, setActiveSpecimen] = useState(0);
   const [journeyPhase, setJourneyPhase] = useState<0 | 1 | 2>(0);
+  const [journeyHeld, setJourneyHeld] = useState(false);
+  const journeyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (journeyHeld) return;
+    const id = window.setInterval(() => {
+      setJourneyPhase((p) => ((p + 1) % 3) as 0 | 1 | 2);
+    }, 6500);
+    return () => window.clearInterval(id);
+  }, [journeyHeld]);
+
+  function selectJourneyPhase(idx: 0 | 1 | 2) {
+    setJourneyPhase(idx);
+    setJourneyHeld(true);
+    if (journeyTimeoutRef.current) clearTimeout(journeyTimeoutRef.current);
+    journeyTimeoutRef.current = setTimeout(() => setJourneyHeld(false), 9000);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (journeyTimeoutRef.current) clearTimeout(journeyTimeoutRef.current);
+    };
+  }, []);
+
   const [journeySpeed, setJourneySpeed] = useState<number>(0.75);
   const [bentoWordMode, setBentoWordMode] = useState<"word" | "sentence">("word");
 
@@ -1168,16 +1756,19 @@ export default function Home() {
             <div className="lg:col-span-5 flex flex-col justify-between gap-4 h-full">
               <AnimatedCard
                 delay={40}
-                className="flex-1 flex flex-col justify-between rounded-3xl border border-white/85 bg-white/75 p-6 backdrop-blur-md shadow-2xs hover:bg-white/95 hover:shadow-md transition-all group"
+                className="flex-1 flex flex-col justify-between rounded-3xl border border-white/85 bg-white/75 p-6 backdrop-blur-md shadow-2xs hover:bg-white/95 hover:shadow-[0_8px_30px_rgb(196,92,62,0.12)] hover:border-[#c45c3e]/30 transition-all group"
               >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-2.5">
                     <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f6d7c8] text-[#a24b38] group-hover:scale-105 transition-transform duration-300 shadow-2xs">
                       <SproutIcon className="h-5 w-5" />
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#f6d7c8]/80 text-[#8a4634]">
-                      {t.empathyCard1Tag}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <EmpathyCalmRipple />
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#f6d7c8]/80 text-[#8a4634]">
+                        {t.empathyCard1Tag}
+                      </span>
+                    </div>
                   </div>
                   <h3 className="text-base font-bold text-zinc-900 mb-1.5">
                     {t.empathyCard1Title}
@@ -1190,16 +1781,19 @@ export default function Home() {
 
               <AnimatedCard
                 delay={90}
-                className="flex-1 flex flex-col justify-between rounded-3xl border border-white/85 bg-white/75 p-6 backdrop-blur-md shadow-2xs hover:bg-white/95 hover:shadow-md transition-all group"
+                className="flex-1 flex flex-col justify-between rounded-3xl border border-white/85 bg-white/75 p-6 backdrop-blur-md shadow-2xs hover:bg-white/95 hover:shadow-[0_8px_30px_rgb(61,95,120,0.12)] hover:border-[#3d5f78]/30 transition-all group"
               >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-2.5">
                     <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#d5e4ef] text-[#3d5f78] group-hover:scale-105 transition-transform duration-300 shadow-2xs">
                       <HeadphonesAcousticIcon className="h-5 w-5" />
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#d5e4ef]/80 text-[#3d5f78]">
-                      {t.empathyCard2Tag}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <EmpathyAcousticWave />
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#d5e4ef]/80 text-[#3d5f78]">
+                        {t.empathyCard2Tag}
+                      </span>
+                    </div>
                   </div>
                   <h3 className="text-base font-bold text-zinc-900 mb-1.5">
                     {t.empathyCard2Title}
@@ -1212,16 +1806,19 @@ export default function Home() {
 
               <AnimatedCard
                 delay={140}
-                className="flex-1 flex flex-col justify-between rounded-3xl border border-white/85 bg-white/75 p-6 backdrop-blur-md shadow-2xs hover:bg-white/95 hover:shadow-md transition-all group"
+                className="flex-1 flex flex-col justify-between rounded-3xl border border-white/85 bg-white/75 p-6 backdrop-blur-md shadow-2xs hover:bg-white/95 hover:shadow-[0_8px_30px_rgb(63,111,92,0.12)] hover:border-[#3f6f5c]/30 transition-all group"
               >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-2.5">
                     <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#d8e6d6] text-[#3f6a4a] group-hover:scale-105 transition-transform duration-300 shadow-2xs">
                       <HeartHandIcon className="h-5 w-5" />
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#d8e6d6]/80 text-[#3f6a4a]">
-                      {t.empathyCard3Tag}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <EmpathyGrowthPulse />
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#d8e6d6]/80 text-[#3f6a4a]">
+                        {t.empathyCard3Tag}
+                      </span>
+                    </div>
                   </div>
                   <h3 className="text-base font-bold text-zinc-900 mb-1.5">
                     {t.empathyCard3Title}
@@ -1258,22 +1855,34 @@ export default function Home() {
                     </span>
                   </div>
 
-                  {/* Specimen Tabs */}
-                  <div className="flex flex-wrap gap-1.5 p-1 bg-stone-100/80 rounded-2xl border border-stone-200/70 mb-5">
-                    {PHONETIC_SPECIMENS.map((specimen, idx) => (
-                      <button
-                        key={specimen.key}
-                        type="button"
-                        onClick={() => setActiveSpecimen(idx)}
-                        className={`flex-1 min-w-17.5 py-1.5 px-2 rounded-xl text-xs font-medium transition-all ${
-                          activeSpecimen === idx
-                            ? "bg-white text-zinc-900 font-bold shadow-xs border border-stone-200/50"
-                            : "text-zinc-600 hover:text-zinc-900 hover:bg-white/50"
-                        }`}
-                      >
-                        {lang === "hi" ? specimen.tagHi : specimen.tagEn}
-                      </button>
-                    ))}
+                  {/* Specimen Tabs with Framer Motion layoutId sliding pill */}
+                  <div className="flex flex-wrap gap-1.5 p-1 bg-stone-100/80 rounded-2xl border border-stone-200/70 mb-5 relative">
+                    {PHONETIC_SPECIMENS.map((specimen, idx) => {
+                      const isSelected = activeSpecimen === idx;
+                      return (
+                        <button
+                          key={specimen.key}
+                          type="button"
+                          onClick={() => setActiveSpecimen(idx)}
+                          className={`relative flex-1 min-w-17.5 py-1.5 px-2 rounded-xl text-xs font-medium transition-colors z-10 ${
+                            isSelected
+                              ? "text-zinc-900 font-bold"
+                              : "text-zinc-600 hover:text-zinc-900 hover:bg-white/40"
+                          }`}
+                        >
+                          {isSelected && (
+                            <motion.div
+                              layoutId="specimenTab"
+                              className="absolute inset-0 rounded-xl bg-white shadow-xs border border-stone-200/60 -z-10"
+                              transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                            />
+                          )}
+                          <span className="relative z-10">
+                            {lang === "hi" ? specimen.tagHi : specimen.tagEn}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* Active Specimen Details */}
@@ -1306,7 +1915,13 @@ export default function Home() {
                           </div>
                         </div>
 
-                        {/* Physiological Sliders */}
+                        {/* Animated Vocal-Tract / Lip-Contour Morphing SVG */}
+                        <VocalTractIllustration
+                          specimenKey={sp.key}
+                          accent={sp.accent}
+                        />
+
+                        {/* Physiological Sliders with Framer Motion animated progress bars */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                           <div className="p-3.5 rounded-2xl bg-white border border-stone-200/70 shadow-2xs">
                             <div className="flex justify-between items-center text-xs mb-1.5 font-medium">
@@ -1320,12 +1935,14 @@ export default function Home() {
                               </span>
                             </div>
                             <div className="h-2 w-full rounded-full bg-stone-100 overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all duration-500 ease-out"
+                              <motion.div
+                                className="h-full rounded-full"
                                 style={{
-                                  width: `${sp.tongueHeight}%`,
                                   background: sp.accent,
                                 }}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${sp.tongueHeight}%` }}
+                                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                               />
                             </div>
                           </div>
@@ -1342,12 +1959,14 @@ export default function Home() {
                               </span>
                             </div>
                             <div className="h-2 w-full rounded-full bg-stone-100 overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all duration-500 ease-out"
+                              <motion.div
+                                className="h-full rounded-full"
                                 style={{
-                                  width: `${sp.lipOpening}%`,
                                   background: sp.accent,
                                 }}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${sp.lipOpening}%` }}
+                                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                               />
                             </div>
                           </div>
@@ -1396,97 +2015,121 @@ export default function Home() {
           </Reveal>
 
           {/* Interactive 3-Stage Pipeline Ribbon */}
-          <AnimatedCard
-            delay={50}
-            hoverLift={false}
-            className="glass-card overflow-hidden rounded-3xl p-5 sm:p-8 mb-8 shadow-sm border border-white/90"
+          <div
+            onMouseEnter={() => setJourneyHeld(true)}
+            onMouseLeave={() => setJourneyHeld(false)}
           >
-            {/* Pipeline Ribbon Tabs */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-1.5 bg-stone-100/90 rounded-2xl border border-stone-200/80 mb-6">
-              {[
-                {
-                  idx: 0 as const,
-                  n: "01",
-                  titleHi: "देखें और सुनें",
-                  titleEn: "Observe & Listen",
-                  subHi: "3D ओष्ठ-निरीक्षण",
-                  subEn: "3D Lip Observation",
-                  accent: "#c45c3e",
-                },
-                {
-                  idx: 1 as const,
-                  n: "02",
-                  titleHi: "बोलें और रिकॉर्ड करें",
-                  titleEn: "Articulate & Record",
-                  subHi: "16kHz DSP ग्रहण",
-                  subEn: "16kHz DSP Capture",
-                  accent: "#3f6f5c",
-                },
-                {
-                  idx: 2 as const,
-                  n: "03",
-                  titleHi: "मित्र वाक् परामर्श",
-                  titleEn: "Mitra Guidance",
-                  subHi: "क्लिनिकल विश्लेषण",
-                  subEn: "Clinical Analysis",
-                  accent: "#b8862a",
-                },
-              ].map((item) => {
-                const on = journeyPhase === item.idx;
-                return (
-                  <button
-                    key={item.n}
-                    type="button"
-                    onClick={() => setJourneyPhase(item.idx)}
-                    className={`flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
-                      on
-                        ? "bg-white text-zinc-900 shadow-xs border border-stone-200/80 font-bold"
-                        : "text-zinc-600 hover:text-zinc-900 hover:bg-white/50"
-                    }`}
-                  >
-                    <span
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-xs"
-                      style={{
-                        background: on ? item.accent : "rgba(0,0,0,0.06)",
-                        color: on ? "#fff" : "#71717a",
-                      }}
+            <AnimatedCard
+              delay={50}
+              hoverLift={false}
+              className="glass-card overflow-hidden rounded-3xl p-5 sm:p-8 mb-8 shadow-sm border border-white/90"
+            >
+              {/* Pipeline Ribbon Tabs */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-1.5 bg-stone-100/90 rounded-2xl border border-stone-200/80 mb-6 relative">
+                {[
+                  {
+                    idx: 0 as const,
+                    n: "01",
+                    titleHi: "देखें और सुनें",
+                    titleEn: "Observe & Listen",
+                    subHi: "3D ओष्ठ-निरीक्षण",
+                    subEn: "3D Lip Observation",
+                    accent: "#c45c3e",
+                  },
+                  {
+                    idx: 1 as const,
+                    n: "02",
+                    titleHi: "बोलें और रिकॉर्ड करें",
+                    titleEn: "Articulate & Record",
+                    subHi: "16kHz DSP ग्रहण",
+                    subEn: "16kHz DSP Capture",
+                    accent: "#3f6f5c",
+                  },
+                  {
+                    idx: 2 as const,
+                    n: "03",
+                    titleHi: "मित्र वाक् परामर्श",
+                    titleEn: "Mitra Guidance",
+                    subHi: "क्लिनिकल विश्लेषण",
+                    subEn: "Clinical Analysis",
+                    accent: "#b8862a",
+                  },
+                ].map((item) => {
+                  const on = journeyPhase === item.idx;
+                  return (
+                    <button
+                      key={item.n}
+                      type="button"
+                      onClick={() => selectJourneyPhase(item.idx)}
+                      className={`relative flex items-center gap-3 p-3 rounded-xl text-left transition-colors overflow-hidden ${
+                        on
+                          ? "text-zinc-900 font-bold"
+                          : "text-zinc-600 hover:text-zinc-900 hover:bg-white/40"
+                      }`}
                     >
-                      {item.n}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="text-xs sm:text-sm font-bold truncate">
-                        {lang === "hi" ? item.titleHi : item.titleEn}
+                      {on && (
+                        <motion.div
+                          layoutId="pipelineStageTab"
+                          className="absolute inset-0 bg-white rounded-xl shadow-xs border border-stone-200/80"
+                          transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                        />
+                      )}
+                      <span
+                        className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-xs transition-colors"
+                        style={{
+                          background: on ? item.accent : "rgba(0,0,0,0.06)",
+                          color: on ? "#fff" : "#71717a",
+                        }}
+                      >
+                        {item.n}
+                      </span>
+                      <div className="min-w-0 relative z-10">
+                        <div className="text-xs sm:text-sm font-bold truncate">
+                          {lang === "hi" ? item.titleHi : item.titleEn}
+                        </div>
+                        <div className="text-[10px] text-zinc-400 font-medium truncate">
+                          {lang === "hi" ? item.subHi : item.subEn}
+                        </div>
                       </div>
-                      <div className="text-[10px] text-zinc-400 font-medium truncate">
-                        {lang === "hi" ? item.subHi : item.subEn}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
 
-            {/* Dynamic Stage Viewport */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={journeyPhase}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.22, ease: "easeOut" }}
-                className="rounded-2xl border border-white/80 bg-white/40 p-5 sm:p-6 min-h-95 flex flex-col justify-center"
-              >
-                {journeyPhase === 0 && (
-                  <ObservationPipelineDemo
-                    speed={journeySpeed}
-                    onSpeedChange={setJourneySpeed}
-                  />
-                )}
-                {journeyPhase === 1 && <DspRecordingPipelineDemo />}
-                {journeyPhase === 2 && <MitraGuidancePipelineDemo />}
-              </motion.div>
-            </AnimatePresence>
-          </AnimatedCard>
+                      {/* Smooth animated progress line underneath active stage tab */}
+                      {on && !journeyHeld && (
+                        <motion.div
+                          key={`progress-${item.idx}`}
+                          className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full z-20"
+                          style={{ background: item.accent }}
+                          initial={{ scaleX: 0, transformOrigin: "left" }}
+                          animate={{ scaleX: 1 }}
+                          transition={{ duration: 6.5, ease: "linear" }}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Dynamic Stage Viewport */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={journeyPhase}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  className="rounded-2xl border border-white/80 bg-white/40 p-5 sm:p-6 min-h-95 flex flex-col justify-center"
+                >
+                  {journeyPhase === 0 && (
+                    <ObservationPipelineDemo
+                      speed={journeySpeed}
+                      onSpeedChange={setJourneySpeed}
+                    />
+                  )}
+                  {journeyPhase === 1 && <DspRecordingPipelineDemo />}
+                  {journeyPhase === 2 && <MitraGuidancePipelineDemo />}
+                </motion.div>
+              </AnimatePresence>
+            </AnimatedCard>
+          </div>
 
           {/* 3 Clinical Methodology Pillars */}
           <div className="grid gap-6 md:grid-cols-3 items-stretch">
@@ -1506,6 +2149,7 @@ export default function Home() {
                     : "Observing 3D lip and tongue kinematics primes the motor cortex before vocalization, establishing natural physical readiness for accurate speech.",
                 accent: "#c45c3e",
                 delay: 70,
+                Diagram: MotorMirroringDiagram,
               },
               {
                 tag:
@@ -1522,6 +2166,7 @@ export default function Home() {
                     : "Background room noise and reverberation are filtered out to perform spectral analysis purely on vowels and consonants, ensuring precise phoneme evaluation.",
                 accent: "#3f6f5c",
                 delay: 120,
+                Diagram: NoiseFilterDiagram,
               },
               {
                 tag:
@@ -1538,35 +2183,42 @@ export default function Home() {
                     : "Instead of abstract error scores, Mitra AI provides concrete anatomical directives on tongue placement, lip rounding, and breath flow regulation.",
                 accent: "#b8862a",
                 delay: 170,
+                Diagram: AnatomicalTargetDiagram,
               },
-            ].map((pillar) => (
-              <AnimatedCard
-                key={pillar.tag}
-                delay={pillar.delay}
-                className="h-full flex flex-col justify-between rounded-3xl border border-white/85 bg-white/75 p-6 sm:p-7 backdrop-blur-md shadow-2xs hover:bg-white/95 hover:shadow-md transition-all group"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span
-                      className="text-xs font-bold uppercase tracking-wider"
-                      style={{ color: pillar.accent }}
-                    >
-                      {pillar.tag}
-                    </span>
-                    <span
-                      className="h-2 w-2 rounded-full group-hover:scale-125 transition-transform duration-300"
-                      style={{ background: pillar.accent }}
-                    />
+            ].map((pillar) => {
+              const DiagramComponent = pillar.Diagram;
+              return (
+                <AnimatedCard
+                  key={pillar.tag}
+                  delay={pillar.delay}
+                  className="h-full flex flex-col justify-between rounded-3xl border border-white/85 bg-white/75 p-6 sm:p-7 backdrop-blur-md shadow-2xs hover:bg-white/95 hover:shadow-md transition-all group"
+                >
+                  <div>
+                    {/* Minimal Animated SVG Diagram Header */}
+                    <DiagramComponent />
+
+                    <div className="flex items-center justify-between mb-3">
+                      <span
+                        className="text-xs font-bold uppercase tracking-wider"
+                        style={{ color: pillar.accent }}
+                      >
+                        {pillar.tag}
+                      </span>
+                      <span
+                        className="h-2 w-2 rounded-full group-hover:scale-125 transition-transform duration-300"
+                        style={{ background: pillar.accent }}
+                      />
+                    </div>
+                    <h3 className="text-base sm:text-lg font-bold text-zinc-900 mb-2">
+                      {pillar.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-zinc-600 leading-relaxed">
+                      {pillar.desc}
+                    </p>
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-zinc-900 mb-2">
-                    {pillar.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-zinc-600 leading-relaxed">
-                    {pillar.desc}
-                  </p>
-                </div>
-              </AnimatedCard>
-            ))}
+                </AnimatedCard>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1614,8 +2266,11 @@ export default function Home() {
                   </p>
                 </div>
 
+                {/* Animated Lip-Spread Contour */}
+                <AnimatedLipSpreadContour />
+
                 {/* Micro Visualizer */}
-                <div className="mt-6 pt-5 border-t border-stone-200/60 grid grid-cols-3 gap-2.5 text-center text-xs">
+                <div className="mt-4 pt-4 border-t border-stone-200/60 grid grid-cols-3 gap-2.5 text-center text-xs">
                   <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200/50">
                     <span className="text-[11px] text-zinc-600 block font-medium">
                       {lang === "hi" ? "जबड़ा (Jaw)" : "Jaw Motion"}
@@ -1663,7 +2318,7 @@ export default function Home() {
                   </p>
                 </div>
 
-                {/* Interactive Tab Switcher in Card */}
+                {/* Interactive Tab Switcher in Card with Smooth AnimatePresence */}
                 <div className="mt-6 pt-5 border-t border-stone-200/60">
                   <div className="flex items-center gap-1.5 p-1 bg-stone-100 rounded-xl border border-stone-200/70 mb-3">
                     <button
@@ -1695,22 +2350,31 @@ export default function Home() {
                       </span>
                     </button>
                   </div>
-                  <div className="text-xs text-zinc-700 font-hindi font-medium bg-stone-50 p-2.5 rounded-xl border border-stone-200/50 flex items-center justify-between">
-                    <span>
-                      {bentoWordMode === "word"
-                        ? (lang === "hi"
-                            ? "उदा: 'नमस्ते', 'स्वास्थ्य', 'प्रतियोगिता'"
-                            : "Ex: 'नमस्ते' (Namaste), 'स्वास्थ्य' (Health)")
-                        : (lang === "hi"
-                            ? "उदा: 'प्रतिदिन सुबह योग करने से मन शांत रहता है।'"
-                            : "Ex: 'प्रतिदिन सुबह योग करने से मन शांत रहता है।'")}
-                    </span>
-                    <span className="text-[10px] text-zinc-400 font-sans">
-                      {bentoWordMode === "word"
-                        ? "Single Phoneme"
-                        : "Continuous Flow"}
-                    </span>
-                  </div>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={bentoWordMode}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                      className="text-xs text-zinc-700 font-hindi font-medium bg-stone-50 p-2.5 rounded-xl border border-stone-200/50 flex items-center justify-between"
+                    >
+                      <span>
+                        {bentoWordMode === "word"
+                          ? (lang === "hi"
+                              ? "उदा: 'नमस्ते', 'स्वास्थ्य', 'प्रतियोगिता'"
+                              : "Ex: 'नमस्ते' (Namaste), 'स्वास्थ्य' (Health)")
+                          : (lang === "hi"
+                              ? "उदा: 'प्रतिदिन सुबह योग करने से मन शांत रहता है।'"
+                              : "Ex: 'प्रतिदिन सुबह योग करने से मन शांत रहता है।'")}
+                      </span>
+                      <span className="text-[10px] text-zinc-400 font-sans">
+                        {bentoWordMode === "word"
+                          ? "Single Phoneme"
+                          : "Continuous Flow"}
+                      </span>
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
               </AnimatedCard>
             </div>
@@ -1737,13 +2401,41 @@ export default function Home() {
                     {t.feature3Desc}
                   </p>
                 </div>
-                <div className="mt-5 pt-4 border-t border-stone-200/60 flex items-center justify-between text-xs">
-                  <span className="font-mono text-[11px] text-zinc-500 bg-stone-100 px-2 py-1 rounded-md">
-                    CER = (S+D+I)/N
-                  </span>
-                  <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 text-[11px]">
-                    96% Precision
-                  </span>
+
+                {/* Animated Character Alignment Pills */}
+                <div className="mt-4 pt-3 border-t border-stone-200/60">
+                  <div className="flex items-center gap-1 p-1.5 bg-stone-50 rounded-xl border border-stone-200/50 mb-3">
+                    {[
+                      { char: "न", status: "match" },
+                      { char: "म", status: "match" },
+                      { char: "स", status: "match" },
+                      { char: "्", status: "match" },
+                      { char: "त", status: "match" },
+                      { char: "े", status: "match" },
+                    ].map((c, i) => (
+                      <motion.div
+                        key={i}
+                        className="flex-1 py-1 text-center font-hindi text-xs font-bold rounded-lg bg-white border border-emerald-200/70 text-emerald-800 shadow-2xs"
+                        animate={{ opacity: [0.85, 1, 0.85] }}
+                        transition={{
+                          duration: 2.2,
+                          repeat: Infinity,
+                          delay: i * 0.16,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        {c.char}
+                      </motion.div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-mono text-[11px] text-zinc-500 bg-stone-100 px-2 py-0.5 rounded-md">
+                      CER = (S+D+I)/N
+                    </span>
+                    <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 text-[11px]">
+                      96% Precision
+                    </span>
+                  </div>
                 </div>
               </AnimatedCard>
             </div>
@@ -1772,18 +2464,30 @@ export default function Home() {
                 </div>
                 <div className="mt-5 pt-4 border-t border-stone-200/60 flex items-center justify-between text-[11px] text-zinc-600">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600 bg-stone-100/90 px-1.5 py-0.5 rounded-md">
+                    <motion.span
+                      className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600 bg-stone-100/90 px-1.5 py-0.5 rounded-md border border-stone-200/60"
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2.4, repeat: Infinity, delay: 0, ease: [0.22, 1, 0.36, 1] }}
+                    >
                       <TonguePlacementIcon className="h-3 w-3 text-[#3d5f78]" />
                       <span>{lang === "hi" ? "जिह्वा" : "Tongue"}</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600 bg-stone-100/90 px-1.5 py-0.5 rounded-md">
+                    </motion.span>
+                    <motion.span
+                      className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600 bg-stone-100/90 px-1.5 py-0.5 rounded-md border border-stone-200/60"
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2.4, repeat: Infinity, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    >
                       <AirflowBreezeIcon className="h-3 w-3 text-[#3d5f78]" />
                       <span>{lang === "hi" ? "श्वास" : "Breath"}</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600 bg-stone-100/90 px-1.5 py-0.5 rounded-md">
+                    </motion.span>
+                    <motion.span
+                      className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600 bg-stone-100/90 px-1.5 py-0.5 rounded-md border border-stone-200/60"
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2.4, repeat: Infinity, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    >
                       <LipsContourIcon className="h-3 w-3 text-[#3d5f78]" />
                       <span>{lang === "hi" ? "ओष्ठ" : "Lips"}</span>
-                    </span>
+                    </motion.span>
                   </div>
                   <span className="font-semibold text-[#3d5f78] shrink-0 ml-1">
                     Instant
@@ -1814,7 +2518,27 @@ export default function Home() {
                     {t.feature5Desc}
                   </p>
                 </div>
-                <div className="mt-5 pt-4 border-t border-stone-200/60 flex items-center justify-between text-xs">
+
+                {/* Animated Multi-Speed Waveform */}
+                <div className="h-8 flex items-center justify-center gap-1 bg-stone-50 rounded-xl border border-stone-200/60 px-3 mt-4 mb-2">
+                  {[6, 13, 22, 10, 16, 22, 15, 9, 18, 24, 14, 7].map((h, i) => (
+                    <motion.span
+                      key={i}
+                      className="w-1 rounded-full bg-[#c45c3e]"
+                      animate={{
+                        height: [`${Math.round(h * 0.35)}px`, `${h}px`, `${Math.round(h * 0.35)}px`],
+                      }}
+                      transition={{
+                        duration: 1.4 + (i % 3) * 0.2,
+                        repeat: Infinity,
+                        ease: [0.22, 1, 0.36, 1],
+                        delay: (i * 0.08) % 0.3,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between text-xs">
                   <span className="text-[11px] text-zinc-500 font-medium">
                     hi-IN-SwaraNeural
                   </span>
@@ -1828,32 +2552,11 @@ export default function Home() {
         </div>
       </section>
 
-      <ColorBridge from="#e6eef3" to="#ece6d8" />
+      <ColorBridge from="#e6eef3" to="#f2efe9" />
 
-      {/* <section className="bg-[#ece6d8] px-4 py-16 sm:px-6 lg:px-8">
-        <Reveal>
-          <div className="glass-card mx-auto max-w-4xl rounded-3xl p-8 sm:p-12">
-            <div className="flex flex-col items-center gap-6 md:flex-row">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#c45c3e] text-white shadow-lg shadow-[#c45c3e]/20">
-                <GraduationBadgeIcon className="h-8 w-8 text-white" />
-              </div>
-              <div className="text-center md:text-left">
-                <span className="inline-block rounded-md bg-[#f3d7c8] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#8a4634]">
-                  {t.projectBadge}
-                </span>
-                <h3 className="mt-3 text-2xl font-black text-zinc-900 sm:text-3xl">
-                  {t.projectTitle}
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-zinc-700 sm:text-base">
-                  {t.projectDesc}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Reveal>
-      </section> */}
+      <FaqSection />
 
-      <ColorBridge from="#ece6d8" to="#f4eee4" />
+      <ColorBridge from="#f2efe9" to="#f4eee4" />
 
       <section className="bg-[#f4eee4] px-4 pb-10 sm:px-6 lg:px-8 relative">
         <Image

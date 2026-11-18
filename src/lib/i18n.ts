@@ -142,6 +142,20 @@ export const i18n = {
     footerText: "SwarSaarthi, An AI-Powered Speech Assistive System",
     footerNote: "Made with care for better communication",
     langSwitch: "हिन्दी",
+
+    // Before You Begin FAQ Section
+    faqEyebrow: "A LITTLE CLARITY",
+    faqTitleLine1: "Before you",
+    faqTitleLine2: "begin.",
+    faqSubtitle: "A few things you might be wondering.",
+    faq1Q: "What is SwarSaarthi?",
+    faq1A: "SwarSaarthi is a companion for practising Hindi speech. You can listen to a word or sentence, record yourself, and receive pronunciation feedback. It gives your practice a little structure, at a pace you choose.",
+    faq2Q: "Do I need to know Hindi already?",
+    faq2A: "No prior fluency is required. Every practice item includes Devanagari script, English transliteration, bilingual meanings, and slow-motion audio playback (0.5× to 1.0×) so you can follow along comfortably in either Hindi or English.",
+    faq3Q: "How does pronunciation feedback work?",
+    faq3A: "When you record, our neural speech model compares your spoken sounds letter-by-letter against the target word using Character Error Rate (CER), and Mitra AI provides gentle, practical tips on tongue placement, lip shape, and breath flow.",
+    faq4Q: "Can I practise at my own pace?",
+    faq4A: "Completely. There are no countdown timers, penalties, or forced progressions. You can replay reference audio as many times as you like, retry any word freely, or switch between basic words and full sentences whenever you feel ready.",
   },
 
   hi: {
@@ -277,6 +291,20 @@ export const i18n = {
     footerText: "स्वरसारथी - AI संचालित वाक् सहायक प्रणाली",
     footerNote: "बेहतर संवाद के लिए देखभाल से बनाया गया",
     langSwitch: "English",
+
+    // Before You Begin FAQ Section
+    faqEyebrow: "थोड़ी स्पष्टता",
+    faqTitleLine1: "शुरू करने से",
+    faqTitleLine2: "पहले।",
+    faqSubtitle: "कुछ सामान्य बातें जो आपके मन में हो सकती हैं।",
+    faq1Q: "स्वरसारथी (SwarSaarthi) क्या है?",
+    faq1A: "स्वरसारथी हिंदी वाक् और उच्चारण अभ्यास के लिए एक सहायक साथी है। इसमें आप किसी शब्द या वाक्य को सुन सकते हैं, अपनी आवाज़ रिकॉर्ड कर सकते हैं और उच्चारण पर स्पष्ट मार्गदर्शन प्राप्त कर सकते हैं—वह भी पूरी तरह अपनी चुनी हुई गति से।",
+    faq2Q: "क्या मुझे पहले से हिंदी आना आवश्यक है?",
+    faq2A: "धाराप्रवाह हिंदी आना आवश्यक नहीं है। प्रत्येक अभ्यास शब्द के साथ देवनागरी लिपि, अंग्रेजी लिप्यंतरण (Transliteration), दोनों भाषाओं में अर्थ और धीमी गति (0.5× से 1.0×) का ऑडियो उपलब्ध है ताकि आप सहजता से सीख सकें।",
+    faq3Q: "उच्चारण फ़ीडबैक कैसे काम करता है?",
+    faq3A: "जब आप अपनी आवाज़ रिकॉर्ड करते हैं, तो हमारा न्यूरल वाक् मॉडल कैरेक्टर एरर रेट (CER) के माध्यम से आपके बोले गए अक्षरों की लक्ष्य शब्द से तुलना करता है और मित्र AI जीभ की स्थिति, होंठों के आकार व सांस के प्रवाह पर सरल सुझाव देता है।",
+    faq4Q: "क्या मैं अपनी गति से अभ्यास कर सकता हूँ?",
+    faq4A: "बिल्कुल। यहाँ कोई टाइमर, अंक कटौती या जल्दबाज़ी नहीं है। आप जितनी बार चाहें सही उच्चारण सुन सकते हैं, बिना किसी दबाव के पुनः प्रयास कर सकते हैं और अपनी सुविधा अनुसार शब्दों या वाक्यों का अभ्यास कर सकते हैं।",
   },
 } as const;
 
